@@ -11,6 +11,7 @@
 // #define REST_DETECTION_DISABLE_LPF
 
 #include <Arduino.h>
+#include <assert.h>
 #include <vqf.h>
 #include <basicvqf.h>
 #include "types.h"
