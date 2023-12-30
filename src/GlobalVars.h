@@ -28,8 +28,8 @@
 
 #include "LEDManager.h"
 #include "configuration/Configuration.h"
-#include "network/connection.h"
-#include "network/manager.h"
+// #include "network/connection.h"
+// #include "network/manager.h"
 #include "sensors/SensorManager.h"
 #include "status/StatusManager.h"
 
@@ -38,7 +38,7 @@ extern SlimeVR::LEDManager ledManager;
 extern SlimeVR::Status::StatusManager statusManager;
 extern SlimeVR::Configuration::Configuration configuration;
 extern SlimeVR::Sensors::SensorManager sensorManager;
-extern SlimeVR::Network::Manager networkManager;
-extern SlimeVR::Network::Connection networkConnection;
+// extern SlimeVR::Network::Manager networkManager;
+// extern SlimeVR::Network::Connection networkConnection;
 
 #endif

@@ -95,7 +95,7 @@ struct Vector3 {
 	Basis outer(const Vector3& p_b) const;
 	Basis to_diagonal_matrix() const;
 
-	inline Vector3 abs() const;
+	inline Vector3 abs_() const;
 	inline Vector3 floor() const;
 	inline Vector3 sign() const;
 	inline Vector3 ceil() const;
@@ -162,8 +162,8 @@ float Vector3::dot(const Vector3& p_b) const {
 	return x * p_b.x + y * p_b.y + z * p_b.z;
 }
 
-Vector3 Vector3::abs() const {
-	return Vector3(std::abs(x), std::abs(y), std::abs(z));
+Vector3 Vector3::abs_() const {
+	return Vector3(abs(x), abs(y), abs(z));
 }
 
 Vector3 Vector3::sign() const {

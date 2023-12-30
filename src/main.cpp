@@ -25,7 +25,7 @@
 #include <Adafruit_TinyUSB.h>
 #include "Wire.h"
 // #include "ota.h"
-// #include "GlobalVars.h"
+#include "GlobalVars.h"
 #include "globals.h"
 #include "credentials.h"
 // #include <i2cscan.h>
