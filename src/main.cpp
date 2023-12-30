@@ -24,9 +24,7 @@
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h>
 #include "Wire.h"
-#if !defined(XIAO_NRF52840)
-#include "ota.h"
-#endif
+// #include "ota.h"
 #include "GlobalVars.h"
 #include "globals.h"
 #include "credentials.h"
@@ -35,12 +33,12 @@
 #include "batterymonitor.h"
 #include "logging/Logger.h"
 
-// Timer<> globalTimer;
+Timer<> globalTimer;
 SlimeVR::Logging::Logger logger("SlimeVR");
 // SlimeVR::Sensors::SensorManager sensorManager;
-// SlimeVR::LEDManager ledManager(LED_PIN);
-// SlimeVR::Status::StatusManager statusManager;
-// SlimeVR::Configuration::Configuration configuration;
+SlimeVR::LEDManager ledManager(LED_PIN);
+SlimeVR::Status::StatusManager statusManager;
+SlimeVR::Configuration::Configuration configuration;
 // SlimeVR::Network::Manager networkManager;
 // SlimeVR::Network::Connection networkConnection;
 
@@ -50,12 +48,12 @@ unsigned long blinkStart = 0;
 unsigned long loopTime = 0;
 unsigned long lastStatePrint = 0;
 bool secondImuActive = false;
-// BatteryMonitor battery;
+BatteryMonitor battery;
 
 void setup()
 {
     Serial.begin(serialBaudRate);
-    // globalTimer = timer_create_default();
+    globalTimer = timer_create_default();
 
 #ifdef ESP32C3
     // Wait for the Computer to be able to connect.
@@ -66,12 +64,12 @@ void setup()
     Serial.println();
     Serial.println();
 
-    // logger.info("SlimeVR v" FIRMWARE_VERSION " starting up...");
+    logger.info("SlimeVR v" FIRMWARE_VERSION " starting up...");
 
-//     statusManager.setStatus(SlimeVR::Status::LOADING, true);
+    statusManager.setStatus(SlimeVR::Status::LOADING, true);
 
-//     ledManager.setup();
-//     configuration.setup();
+    ledManager.setup();
+    // configuration.setup();
 
     // SerialCommands::setUp();
 
@@ -87,26 +85,30 @@ void setup()
 #endif
 
     // using `static_cast` here seems to be better, because there are 2 similar function signatures
-    // Wire.begin(static_cast<int>(PIN_IMU_SDA), static_cast<int>(PIN_IMU_SCL));
+    #if defined(XIAO_NRF52840)
+    Wire.begin();
+    #else
+    Wire.begin(static_cast<int>(PIN_IMU_SDA), static_cast<int>(PIN_IMU_SCL));
+    #endif
 
-// #ifdef ESP8266
-//     Wire.setClockStretchLimit(150000L); // Default stretch limit 150mS
-// #endif
-// #ifdef ESP32 // Counterpart on ESP32 to ClockStretchLimit
-//     Wire.setTimeOut(150);
-// #endif
-//     Wire.setClock(I2C_SPEED);
+#ifdef ESP8266
+    Wire.setClockStretchLimit(150000L); // Default stretch limit 150mS
+#endif
+#ifdef ESP32 // Counterpart on ESP32 to ClockStretchLimit
+    Wire.setTimeOut(150);
+#endif
+    Wire.setClock(I2C_SPEED);
 
     // Wait for IMU to boot
     delay(500);
 
-//     sensorManager.setup();
+    // sensorManager.setup();
 
 //     networkManager.setup();
 //     OTA::otaSetup(otaPassword);
-//     battery.Setup();
+    battery.Setup();
 
-//     statusManager.setStatus(SlimeVR::Status::LOADING, false);
+    statusManager.setStatus(SlimeVR::Status::LOADING, false);
 
 //     sensorManager.postSetup();
 
@@ -115,13 +117,13 @@ void setup()
 
 void loop()
 {
-//     globalTimer.tick();
+    globalTimer.tick();
 //     SerialCommands::update();
 //     OTA::otaUpdate();
 //     networkManager.update();
 //     sensorManager.update();
-//     battery.Loop();
-//     ledManager.update();
+    battery.Loop();
+    ledManager.update();
 #ifdef TARGET_LOOPTIME_MICROS
     long elapsed = (micros() - loopTime);
     if (elapsed < TARGET_LOOPTIME_MICROS)
