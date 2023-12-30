@@ -24,13 +24,15 @@
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h>
 #include "Wire.h"
-// #include "ota.h"
+#if !defined(XIAO_NRF52840)
+#include "ota.h"
+#endif
 #include "GlobalVars.h"
 #include "globals.h"
 #include "credentials.h"
 #include <i2cscan.h>
 #include "serial/serialcommands.h"
-// #include "batterymonitor.h"
+#include "batterymonitor.h"
 #include "logging/Logger.h"
 
 // Timer<> globalTimer;
