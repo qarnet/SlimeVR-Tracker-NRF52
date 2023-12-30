@@ -139,7 +139,11 @@ namespace SlimeVR
                         Wire.setTimeOut(150);
                     }
                 #else
+                    #if defined(XIAO_NRF52840)
+                    Wire.begin(); // TODO: see if this works like this
+                    #else
                     Wire.begin(static_cast<int>(sdaPin), static_cast<int>(sclPin));
+                    #endif
                 #endif
 
                 activeSCL = sclPin;

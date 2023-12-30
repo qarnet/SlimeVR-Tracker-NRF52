@@ -58,7 +58,11 @@ void scanPorts() {
     for (uint8_t j = 0; j < sizeof(portArray); j++) {
       if (i != j){
         Serial.print("Scanning (SDA : SCL) - " + portMap[i] + " : " + portMap[j] + " - ");
+        #if defined(XIAO_NRF52840)
+        Wire.begin(); // TODO: see if this works like this
+        #else
         Wire.begin(portArray[i], portArray[j]);
+        #endif
         check_if_exist_I2C();
       }
     }

@@ -162,6 +162,7 @@ float Vector3::dot(const Vector3& p_b) const {
 	return x * p_b.x + y * p_b.y + z * p_b.z;
 }
 
+// TODO: Choose better name?
 Vector3 Vector3::abs_() const {
 	return Vector3(abs(x), abs(y), abs(z));
 }

@@ -28,7 +28,7 @@
 #include "GlobalVars.h"
 #include "globals.h"
 #include "credentials.h"
-// #include <i2cscan.h>
+#include <i2cscan.h>
 #include "serial/serialcommands.h"
 // #include "batterymonitor.h"
 #include "logging/Logger.h"
