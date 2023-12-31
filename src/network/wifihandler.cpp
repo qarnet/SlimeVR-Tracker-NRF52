@@ -20,6 +20,8 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
+#if !defined(XIAO_NRF52840)
+
 #include "globals.h"
 #include "logging/Logger.h"
 #include "GlobalVars.h"
@@ -246,3 +248,5 @@ void WiFiNetwork::upkeep() {
     }
     return;
 }
+
+#endif

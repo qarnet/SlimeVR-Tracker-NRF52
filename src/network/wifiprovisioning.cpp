@@ -20,6 +20,8 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
+#if !defined(XIAO_NRF52840)
+
 #include "wifiprovisioning.h"
 #include "wifihandler.h"
 #include "logging/Logger.h"
@@ -55,3 +57,5 @@ void WiFiNetwork::provideNeighbours() {
 bool WiFiNetwork::isProvisioning() {
     return provisioning && !WiFi.smartConfigDone();
 }
+
+#endif

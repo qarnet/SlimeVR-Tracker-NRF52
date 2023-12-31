@@ -179,5 +179,4 @@ private:
 }  // namespace SlimeVR
 
 #endif
-
 #endif  // SLIMEVR_NETWORK_BLUETOOTHCONNECTION_H_

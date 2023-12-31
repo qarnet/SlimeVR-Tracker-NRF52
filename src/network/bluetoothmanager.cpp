@@ -20,6 +20,7 @@
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE.
 */
+#if defined(XIAO_NRF52840)
 
 #include "bluetoothmanager.h"
 
@@ -48,3 +49,5 @@ void BluetoothManager::update() {
 
 }  // namespace Network
 }  // namespace SlimeVR
+
+#endif

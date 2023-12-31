@@ -45,5 +45,4 @@ private:
 }  // namespace SlimeVR
 
 #endif
-
 #endif  // SLIMEVR_NETWORK_BLUETOOTHMANAGER_H_

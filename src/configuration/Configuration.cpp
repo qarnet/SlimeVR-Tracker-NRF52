@@ -21,7 +21,13 @@
     THE SOFTWARE.
 */
 
+#if defined(XIAO_NRF52840)
+// TODO: Implement Adafruit_LittleFS for nRF52
+#include <Adafruit_LittleFS.h>
+#include <Adafruit_LittleFS_File.h>
+#else
 #include <LittleFS.h>
+#endif
 
 #include "Configuration.h"
 #include "consts.h"
@@ -33,6 +39,8 @@
 namespace SlimeVR {
     namespace Configuration {
         void Configuration::setup() {
+            #if defined(XIAO_NRF52840)
+            #else
             if (m_Loaded) {
                 return;
             }
@@ -90,9 +98,12 @@ namespace SlimeVR {
 #ifdef DEBUG_CONFIGURATION
             print();
 #endif
+            #endif
         }
 
         void Configuration::save() {
+            #if defined(XIAO_NRF52840)
+            #else
             for (size_t i = 0; i < m_Calibrations.size(); i++) {
                 CalibrationConfig config = m_Calibrations[i];
                 if (config.type == CalibrationConfigType::NONE) {
@@ -116,9 +127,12 @@ namespace SlimeVR {
             }
 
             m_Logger.debug("Saved configuration");
+            #endif
         }
 
         void Configuration::reset() {
+            #if defined(XIAO_NRF52840)
+            #else
             LittleFS.format();
 
             m_Calibrations.clear();
@@ -126,6 +140,7 @@ namespace SlimeVR {
             save();
 
             m_Logger.debug("Reset configuration");
+            #endif
         }
 
         int32_t Configuration::getVersion() const {
@@ -210,6 +225,8 @@ namespace SlimeVR {
             }
 #else
             {
+                #if defined(XIAO_NRF52840)
+                #else
                 if (!LittleFS.exists(DIR_CALIBRATIONS)) {
                     m_Logger.warn("No calibration data found, creating new directory...");
 
@@ -237,6 +254,7 @@ namespace SlimeVR {
 
                     setCalibration(sensorId, calibrationConfig);
                 }
+                #endif
             }
 #endif
         }
@@ -313,6 +331,8 @@ namespace SlimeVR {
             }
 #else
             {
+                #if defined(XIAO_NRF52840)
+                #else
                 if (!LittleFS.exists(DIR_TEMPERATURE_CALIBRATIONS)) {
                     m_Logger.warn("No temperature calibration data found, creating new directory...");
 
@@ -357,6 +377,7 @@ namespace SlimeVR {
                     }
                 }
                 
+                #endif
                 return false;
             }
 #endif
@@ -366,6 +387,8 @@ namespace SlimeVR {
             if (config.type == CalibrationConfigType::NONE) {
                 return false;
             }
+            #if defined(XIAO_NRF52840)
+            #else
 
             char path[32];
             sprintf(path, DIR_TEMPERATURE_CALIBRATIONS"/%d", sensorId);
@@ -377,6 +400,7 @@ namespace SlimeVR {
             file.close();
 
             m_Logger.debug("Saved temperature calibration data for sensorId:%i", sensorId);
+            #endif
             return true;
         }
 

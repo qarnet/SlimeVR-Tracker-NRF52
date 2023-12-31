@@ -20,6 +20,8 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
+#if !defined(XIAO_NRF52840)
+
 #ifndef SLIMEVR_WIFIPROVISIONING_H_
 #define SLIMEVR_WIFIPROVISIONING_H_
 
@@ -31,4 +33,5 @@ namespace WiFiNetwork {
     void provideNeighbours();
 }
 
+#endif
 #endif // SLIMEVR_WIFIPROVISIONING_H_

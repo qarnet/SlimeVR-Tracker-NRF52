@@ -181,5 +181,4 @@ private:
 }  // namespace SlimeVR
 
 #endif
-
 #endif  // SLIMEVR_NETWORK_CONNECTION_H_

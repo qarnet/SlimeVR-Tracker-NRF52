@@ -23,6 +23,8 @@
 #ifndef SLIMEVR_WIFI_H_
 #define SLIMEVR_WIFI_H_
 
+#if !defined(XIAO_NRF52840)
+
 #ifdef ESP8266
     #include <ESP8266WiFi.h>
 #else
@@ -49,4 +51,5 @@ typedef enum {
     SLIME_WIFI_SERVER_CRED_G_ATTEMPT
 } wifi_reconnection_statuses;
 
+#endif
 #endif // SLIMEVR_WIFI_H_
