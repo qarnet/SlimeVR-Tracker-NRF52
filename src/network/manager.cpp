@@ -43,10 +43,10 @@ void Manager::update() {
 
 	if (!wasConnected) {
 		// WiFi was reconnected, rediscover the server and reconnect
-		networkConnection.reset();
+		networkConnection->reset();
 	}
 
-	networkConnection.update();
+	networkConnection->update();
 }
 
 }  // namespace Network

@@ -55,7 +55,7 @@ void BNO055Sensor::motionLoop() {
         Vector3 accel = imu.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
         Vector3 mag = imu.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
 
-        networkConnection.sendInspectionRawIMUData(sensorId, UNPACK_VECTOR(gyro), 255, UNPACK_VECTOR(accel), 255, UNPACK_VECTOR(mag), 255);
+        networkConnection->sendInspectionRawIMUData(sensorId, UNPACK_VECTOR(gyro), 255, UNPACK_VECTOR(accel), 255, UNPACK_VECTOR(mag), 255);
     }
 #endif
 

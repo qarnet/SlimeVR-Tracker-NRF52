@@ -106,7 +106,7 @@ void BNO080Sensor::motionLoop()
             int16_t mZ = imu.getRawMagZ();
             uint8_t mA = imu.getMagAccuracy();
 
-            networkConnection.sendInspectionRawIMUData(sensorId, rX, rY, rZ, rA, aX, aY, aZ, aA, mX, mY, mZ, mA);
+            networkConnection->sendInspectionRawIMUData(sensorId, rX, rY, rZ, rA, aX, aY, aZ, aA, mX, mY, mZ, mA);
         }
 #endif
 
@@ -151,7 +151,7 @@ void BNO080Sensor::motionLoop()
 
     #if ENABLE_INSPECTION
             {
-                networkConnection.sendInspectionCorrectionData(sensorId, quaternion);
+                networkConnection->sendInspectionCorrectionData(sensorId, quaternion);
             }
     #endif // ENABLE_INSPECTION
 
@@ -183,7 +183,7 @@ void BNO080Sensor::motionLoop()
         if (rr != lastReset)
         {
             lastReset = rr;
-            networkConnection.sendSensorError(this->sensorId, rr);
+            networkConnection->sendSensorError(this->sensorId, rr);
         }
 
         m_Logger.error("Sensor %d doesn't respond. Last reset reason:", sensorId, lastReset);
@@ -201,7 +201,7 @@ void BNO080Sensor::sendData()
     if (newFusedRotation)
     {
         newFusedRotation = false;
-        networkConnection.sendRotationData(sensorId, &fusedRotation, DATA_TYPE_NORMAL, calibrationAccuracy);
+        networkConnection->sendRotationData(sensorId, &fusedRotation, DATA_TYPE_NORMAL, calibrationAccuracy);
 
 #ifdef DEBUG_SENSOR
         m_Logger.trace("Quaternion: %f, %f, %f, %f", UNPACK_QUATERNION(fusedRotation));
@@ -211,27 +211,27 @@ void BNO080Sensor::sendData()
         if (newAcceleration)
         {
             newAcceleration = false;
-            networkConnection.sendSensorAcceleration(this->sensorId, this->acceleration);
+            networkConnection->sendSensorAcceleration(this->sensorId, this->acceleration);
         }
 #endif
     }
 
 #if !USE_6_AXIS
-        networkConnection.sendMagnetometerAccuracy(sensorId, magneticAccuracyEstimate);
+        networkConnection->sendMagnetometerAccuracy(sensorId, magneticAccuracyEstimate);
 #endif
 
 #if USE_6_AXIS && BNO_USE_MAGNETOMETER_CORRECTION
     if (newMagData)
     {
         newMagData = false;
-        networkConnection.sendRotationData(sensorId, &magQuaternion, DATA_TYPE_CORRECTION, magCalibrationAccuracy);
-        networkConnection.sendMagnetometerAccuracy(sensorId, magneticAccuracyEstimate);
+        networkConnection->sendRotationData(sensorId, &magQuaternion, DATA_TYPE_CORRECTION, magCalibrationAccuracy);
+        networkConnection->sendMagnetometerAccuracy(sensorId, magneticAccuracyEstimate);
     }
 #endif
 
     if (tap != 0)
     {
-        networkConnection.sendSensorTap(sensorId, tap);
+        networkConnection->sendSensorTap(sensorId, tap);
         tap = 0;
     }
 }

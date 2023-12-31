@@ -209,7 +209,7 @@ namespace SlimeVR
 
             statusManager.setStatus(SlimeVR::Status::IMU_ERROR, !allIMUGood);
 
-            if (!networkConnection.isConnected()) {
+            if (!networkConnection->isConnected()) {
                 return;
             }
 
@@ -238,7 +238,7 @@ namespace SlimeVR
             #endif
             
             #if PACKET_BUNDLING != PACKET_BUNDLING_DISABLED
-                networkConnection.beginBundle();
+                networkConnection->beginBundle();
             #endif
 
             for (auto sensor : m_Sensors) {
@@ -248,7 +248,7 @@ namespace SlimeVR
             }
 
             #if PACKET_BUNDLING != PACKET_BUNDLING_DISABLED
-                networkConnection.endBundle();
+                networkConnection->endBundle();
             #endif
         }
 

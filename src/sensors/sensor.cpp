@@ -44,7 +44,7 @@ void Sensor::setFusedRotationReady() {
 void Sensor::sendData() {
     if (newFusedRotation) {
         newFusedRotation = false;
-        networkConnection.sendRotationData(sensorId, &fusedRotation, DATA_TYPE_NORMAL, calibrationAccuracy);
+        networkConnection->sendRotationData(sensorId, &fusedRotation, DATA_TYPE_NORMAL, calibrationAccuracy);
 
 #ifdef DEBUG_SENSOR
         m_Logger.trace("Quaternion: %f, %f, %f, %f", UNPACK_QUATERNION(fusedRotation));
@@ -53,7 +53,7 @@ void Sensor::sendData() {
 #if SEND_ACCELERATION
         if (newAcceleration) {
             newAcceleration = false;
-            networkConnection.sendSensorAcceleration(sensorId, acceleration);
+            networkConnection->sendSensorAcceleration(sensorId, acceleration);
         }
 #endif
     }
