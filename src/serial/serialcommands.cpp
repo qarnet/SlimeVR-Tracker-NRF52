@@ -32,7 +32,7 @@
 #if ESP32
     #include "nvs_flash.h"
 #endif
-
+// TODO: Implement bluetooth functionality
 namespace SerialCommands {
     SlimeVR::Logging::Logger logger("SerialCommands");
 
@@ -61,6 +61,8 @@ namespace SerialCommands {
 	}
 
 	void cmdSet(CmdParser * parser) {
+        #if defined(XIAO_NRF52840)
+        #else
 		if(parser->getParamCount() != 1) {
 			if (parser->equalCmdParam(1, "WIFI")) {
 				if(parser->getParamCount() < 3) {
@@ -120,9 +122,12 @@ namespace SerialCommands {
 		} else {
 			logger.error("CMD SET ERROR: No variable to set");
 		}
+        #endif
 	}
 
     void printState() {
+        #if defined(XIAO_NRF52840)
+        #else
         logger.info(
             "SlimeVR Tracker, board: %d, hardware: %d, build: %d, firmware: %s, address: %s, mac: %s, status: %d, wifi state: %d",
             BOARD,
@@ -134,6 +139,7 @@ namespace SerialCommands {
             statusManager.getStatus(),
             WiFiNetwork::getWiFiState()
         );
+        #endif
         for (auto sensor : sensorManager.getSensors()) {
             logger.info(
                 "Sensor[%d]: %s (%.3f %.3f %.3f %.3f) is working: %s, had data: %s",
@@ -204,11 +210,15 @@ namespace SerialCommands {
                 BOARD,
                 HARDWARE_MCU,
                 FIRMWARE_BUILD_NUMBER,
-                FIRMWARE_VERSION,
+                FIRMWARE_VERSION
+                #if defined(XIAO_NRF52840)
+                #else
+                ,
                 WiFiNetwork::getAddress().toString().c_str(),
                 WiFi.macAddress().c_str(),
                 statusManager.getStatus(),
                 WiFiNetwork::getWiFiState()
+                #endif
             );
             Sensor* sensor0 = sensorManager.getSensors()[0];
             sensor0->motionLoop();
@@ -227,6 +237,8 @@ namespace SerialCommands {
         }
 
         if (parser->equalCmdParam(1, "WIFISCAN")) {
+            #if defined(XIAO_NRF52840)
+            #else
 			logger.info("[WSCAN] Scanning for WiFi networks...");
 
 			// Scan would fail if connecting, stop connecting before scan
@@ -257,12 +269,16 @@ namespace SerialCommands {
 			if (WiFi.status() != WL_CONNECTED) {
 				WiFi.begin();
 			}
+            #endif
         }
     }
 
     void cmdReboot(CmdParser * parser) {
+        #if defined(XIAO_NRF52840)
+        #else
         logger.info("REBOOT");
         ESP.restart();
+        #endif
     }
 
     void cmdFactoryReset(CmdParser * parser) {
@@ -270,6 +286,8 @@ namespace SerialCommands {
 
         configuration.reset();
 
+        #if defined(XIAO_NRF52840)
+        #else
         WiFi.disconnect(true); // Clear WiFi credentials
         #if ESP8266
             ESP.eraseConfig(); // Clear ESP config
@@ -288,6 +306,7 @@ namespace SerialCommands {
 
         delay(3000);
         ESP.restart();
+        #endif
     }
 
     void cmdTemperatureCalibration(CmdParser* parser) {
