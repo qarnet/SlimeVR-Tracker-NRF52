@@ -23,22 +23,20 @@
 #ifndef SLIMEVR_NETWORK_CONNECTION_H_
 #define SLIMEVR_NETWORK_CONNECTION_H_
 
-#if !defined(XIAO_NRF52840) //TODO: Find a better way to guard this
+#if defined(XIAO_NRF52840) //TODO: Find a better way to guard this
 
 #include <Arduino.h>
-#include <WiFiUdp.h>
 
 #include "Iconnection.h"
 #include "globals.h"
 #include "quat.h"
 #include "sensors/sensor.h"
-#include "wifihandler.h"
 #include "featureflags.h"
 
 namespace SlimeVR {
 namespace Network {
 
-class Connection : public IConnection {
+class BluetoothConnection : public IConnection {
 public:
 	void searchForServer();
 	void update();
@@ -154,14 +152,14 @@ private:
 	bool m_Connected = false;
 	SlimeVR::Logging::Logger m_Logger = SlimeVR::Logging::Logger("UDPConnection");
 
-	WiFiUDP m_UDP;
-	unsigned char m_Packet[128];  // buffer for incoming packets
-	uint64_t m_PacketNumber = 0;
+	// WiFiUDP m_UDP;
+	// unsigned char m_Packet[128];  // buffer for incoming packets
+	// uint64_t m_PacketNumber = 0;
 
-	int m_ServerPort = 6969;
-	IPAddress m_ServerHost = IPAddress(255, 255, 255, 255);
-	unsigned long m_LastConnectionAttemptTimestamp;
-	unsigned long m_LastPacketTimestamp;
+	// int m_ServerPort = 6969;
+	// IPAddress m_ServerHost = IPAddress(255, 255, 255, 255);
+	// unsigned long m_LastConnectionAttemptTimestamp;
+	// unsigned long m_LastPacketTimestamp;
 
 	SensorStatus m_AckedSensorState[MAX_IMU_COUNT] = {SensorStatus::SENSOR_OFFLINE};
 	unsigned long m_LastSensorInfoPacketTimestamp = 0;
@@ -182,4 +180,4 @@ private:
 
 #endif
 
-#endif  // SLIMEVR_NETWORK_CONNECTION_H_
+#endif  // SLIMEVR_NETWORK_BLUETOOTHCONNECTION_H_

@@ -23,6 +23,9 @@
 #ifndef SLIMEVR_NETWORK_MANAGER_H_
 #define SLIMEVR_NETWORK_MANAGER_H_
 
+#if !defined(XIAO_NRF52840) //TODO: Find a better way to guard this
+
+#include "Imanager.h"
 #include "globals.h"
 #include "packets.h"
 #include "wifihandler.h"
@@ -31,7 +34,7 @@
 namespace SlimeVR {
 namespace Network {
 
-class Manager {
+class Manager : public IManager {
 public:
 	void setup();
 	void update();
@@ -42,5 +45,7 @@ private:
 
 }  // namespace Network
 }  // namespace SlimeVR
+
+#endif
 
 #endif  // SLIMEVR_NETWORK_MANAGER_H_

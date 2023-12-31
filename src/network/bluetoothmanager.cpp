@@ -21,21 +21,18 @@
 	THE SOFTWARE.
 */
 
-#include "manager.h"
+#include "bluetoothmanager.h"
 
 #include "GlobalVars.h"
 
 namespace SlimeVR {
 namespace Network {
 
-void Manager::setup() { ::WiFiNetwork::setUp(); }
+void BluetoothManager::setup() {  }
 
-void Manager::update() {
-	WiFiNetwork::upkeep();
+void BluetoothManager::update() {
 
 	auto wasConnected = m_IsConnected;
-
-	m_IsConnected = ::WiFiNetwork::isConnected();
 
 	if (!m_IsConnected) {
 		return;
@@ -43,10 +40,10 @@ void Manager::update() {
 
 	if (!wasConnected) {
 		// WiFi was reconnected, rediscover the server and reconnect
-		networkConnection.reset();
+		networkConnection->reset();
 	}
 
-	networkConnection.update();
+	networkConnection->update();
 }
 
 }  // namespace Network

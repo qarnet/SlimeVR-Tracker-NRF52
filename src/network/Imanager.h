@@ -20,34 +20,24 @@
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE.
 */
+#ifndef SLIMEVR_NETWORK_IMANAGER_H_
+#define SLIMEVR_NETWORK_IMANAGER_H_
 
-#include "manager.h"
-
-#include "GlobalVars.h"
+#include "Imanager.h"
+#include "globals.h"
+#include "packets.h"
 
 namespace SlimeVR {
 namespace Network {
 
-void Manager::setup() { ::WiFiNetwork::setUp(); }
+class IManager {
+public:
+	virtual void setup() = 0;
+	virtual void update() = 0;
 
-void Manager::update() {
-	WiFiNetwork::upkeep();
-
-	auto wasConnected = m_IsConnected;
-
-	m_IsConnected = ::WiFiNetwork::isConnected();
-
-	if (!m_IsConnected) {
-		return;
-	}
-
-	if (!wasConnected) {
-		// WiFi was reconnected, rediscover the server and reconnect
-		networkConnection.reset();
-	}
-
-	networkConnection.update();
-}
+};
 
 }  // namespace Network
 }  // namespace SlimeVR
+
+#endif  // SLIMEVR_NETWORK_IMANAGER_H_

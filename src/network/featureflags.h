@@ -26,6 +26,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <array>
 
 /**
  * Bit packed flags, enum values start with 0 and indicate which bit it is.

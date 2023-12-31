@@ -33,14 +33,22 @@
 #include "batterymonitor.h"
 #include "logging/Logger.h"
 
+#if defined(XIAO_NRF52840)
+#include "network/bluetoothconnection.h"
+#include "network/bluetoothmanager.h"
+#else
+#include "network/connection.h"
+#include "network/manager.h"
+#endif
+
 Timer<> globalTimer;
 SlimeVR::Logging::Logger logger("SlimeVR");
 // SlimeVR::Sensors::SensorManager sensorManager;
 SlimeVR::LEDManager ledManager(LED_PIN);
 SlimeVR::Status::StatusManager statusManager;
 SlimeVR::Configuration::Configuration configuration;
-// SlimeVR::Network::Manager networkManager;
-// SlimeVR::Network::Connection networkConnection;
+SlimeVR::Network::IManager *networkManager;
+SlimeVR::Network::IConnection *networkConnection;
 
 int sensorToCalibrate = -1;
 bool blinking = false;
@@ -52,6 +60,17 @@ BatteryMonitor battery;
 
 void setup()
 {
+    #if defined(XIAO_NRF52840)
+    SlimeVR::Network::BluetoothManager bluetoothManager;
+    SlimeVR::Network::BluetoothConnection bluetoothConnection;
+    networkManager = &bluetoothManager;
+    networkConnection = &bluetoothConnection;
+    #else
+    SlimeVR::Network::Manager wifiManager;
+    SlimeVR::Network::Connection wifiConnection;
+    networkManager = &wifiManager;
+    networkConnection = &wifiConnection;
+    #endif
     Serial.begin(serialBaudRate);
     globalTimer = timer_create_default();
 
@@ -104,7 +123,7 @@ void setup()
 
     // sensorManager.setup();
 
-//     networkManager.setup();
+    // networkManager.setup();
 //     OTA::otaSetup(otaPassword);
     battery.Setup();
 

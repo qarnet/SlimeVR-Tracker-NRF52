@@ -20,34 +20,30 @@
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE.
 */
+#ifndef SLIMEVR_NETWORK_BLUETOOTHMANAGER_H_
+#define SLIMEVR_NETWORK_BLUETOOTHMANAGER_H_
 
-#include "manager.h"
+#if defined(XIAO_NRF52840) //TODO: Find a better way to guard this
 
-#include "GlobalVars.h"
+#include "Imanager.h"
+#include "globals.h"
+#include "packets.h"
 
 namespace SlimeVR {
 namespace Network {
 
-void Manager::setup() { ::WiFiNetwork::setUp(); }
+class BluetoothManager : public IManager {
+public:
+	void setup();
+	void update();
 
-void Manager::update() {
-	WiFiNetwork::upkeep();
-
-	auto wasConnected = m_IsConnected;
-
-	m_IsConnected = ::WiFiNetwork::isConnected();
-
-	if (!m_IsConnected) {
-		return;
-	}
-
-	if (!wasConnected) {
-		// WiFi was reconnected, rediscover the server and reconnect
-		networkConnection.reset();
-	}
-
-	networkConnection.update();
-}
+private:
+	bool m_IsConnected = false;
+};
 
 }  // namespace Network
 }  // namespace SlimeVR
+
+#endif
+
+#endif  // SLIMEVR_NETWORK_BLUETOOTHMANAGER_H_
