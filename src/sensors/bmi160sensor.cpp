@@ -21,6 +21,10 @@
     THE SOFTWARE.
 */
 
+#if defined(XIAO_NRF52840)
+#define optimistic_yield(x) yield() // TODO: Dirty fix, see if this can be properly implemented
+#endif
+
 #include "bmi160sensor.h"
 #include "GlobalVars.h"
 #include <hmc5883l.h>
@@ -178,7 +182,7 @@ void BMI160Sensor::motionSetup() {
         }
     #endif
 
-    #if BMI160_USE_SENSCAL
+    #if BMI160_USE_SENSCAL && !defined(XIAO_NRF52840) // TODO: See if this is possible to implement for nRF
     {
         String localDevice = WiFi.macAddress();
         for (auto const& offsets : sensitivityOffsets) {

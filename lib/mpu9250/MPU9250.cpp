@@ -35,6 +35,7 @@ THE SOFTWARE.
 */
 
 #include "MPU9250.h"
+#include <avr/dtostrf.h>
 
 /** Default constructor, uses default I2C address.
  * @see MPU9250_DEFAULT_ADDRESS

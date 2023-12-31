@@ -24,6 +24,8 @@
 #ifndef SENSORS_BMI160SENSOR_H
 #define SENSORS_BMI160SENSOR_H
 
+#include <avr/dtostrf.h>
+
 #include "sensor.h"
 #include "sensors/axisremap.h"
 #include "magneto1.4.h"
@@ -74,7 +76,7 @@ constexpr float BMI160_ODR_MAG_HZ = 0;
 constexpr float BMI160_ODR_MAG_MICROS = 0;
 #endif
 
-constexpr uint16_t BMI160_SETTINGS_MAX_ODR_HZ = max(max(BMI160_ODR_GYR_HZ, BMI160_ODR_ACC_HZ), BMI160_ODR_MAG_HZ);
+constexpr uint16_t BMI160_SETTINGS_MAX_ODR_HZ = std::max(std::max(BMI160_ODR_GYR_HZ, BMI160_ODR_ACC_HZ), BMI160_ODR_MAG_HZ); // TODO: Was max(), not std::max() see if it's fine to do this
 constexpr uint16_t BMI160_SETTINGS_MAX_ODR_MICROS = BMI160_MAP_ODR_MICROS(1.0f / BMI160_SETTINGS_MAX_ODR_HZ * 1e6f);
 
 constexpr float BMI160_FIFO_AVG_DATA_FRAME_LENGTH = (
@@ -87,7 +89,7 @@ constexpr float BMI160_FIFO_READ_BUFFER_SIZE_MICROS = 30000;
 constexpr float BMI160_FIFO_READ_BUFFER_SIZE_SAMPLES =
     BMI160_SETTINGS_MAX_ODR_HZ * BMI160_FIFO_READ_BUFFER_SIZE_MICROS / 1e6f;
 constexpr uint16_t BMI160_FIFO_MAX_LENGTH = 1024;
-constexpr uint16_t BMI160_FIFO_READ_BUFFER_SIZE_BYTES = min(
+constexpr uint16_t BMI160_FIFO_READ_BUFFER_SIZE_BYTES = std::min( // TODO: // TODO: Was min(), not std::min, see if it's fine to do this
     (float)BMI160_FIFO_MAX_LENGTH - 64,
     BMI160_FIFO_READ_BUFFER_SIZE_SAMPLES * BMI160_FIFO_AVG_DATA_FRAME_LENGTH * 1.25f
 );
