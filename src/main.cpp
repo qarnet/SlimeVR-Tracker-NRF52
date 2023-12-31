@@ -123,7 +123,7 @@ void setup()
 
     // sensorManager.setup();
 
-    // networkManager.setup();
+    networkManager->setup();
 //     OTA::otaSetup(otaPassword);
     battery.Setup();
 
@@ -139,7 +139,7 @@ void loop()
     globalTimer.tick();
 //     SerialCommands::update();
 //     OTA::otaUpdate();
-//     networkManager.update();
+    networkManager->update();
 //     sensorManager.update();
     battery.Loop();
     ledManager.update();
