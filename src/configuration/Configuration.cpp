@@ -241,6 +241,18 @@ namespace SlimeVR {
 
 #if defined(XIAO_NRF52840) //TODO: Figure out how to replicate this directory operation
                 Adafruit_LittleFS_Namespace::File calibrations = LittleFS.open(DIR_CALIBRATIONS);
+                while((calibrations = calibrations.openNextFile(Adafruit_LittleFS_Namespace::FILE_O_READ)).available() != 0) // TODO: Check if this works
+                {
+                    Adafruit_LittleFS_Namespace::File f = calibrations;
+
+                    CalibrationConfig calibrationConfig;
+                    f.read((uint8_t*)&calibrationConfig, sizeof(CalibrationConfig));
+
+                    uint8_t sensorId = strtoul(calibrations.name(), nullptr, 10);
+                    m_Logger.debug("Found sensor calibration for %s at index %d", calibrationConfigTypeToString(calibrationConfig.type), sensorId);
+
+                    setCalibration(sensorId, calibrationConfig);
+                }
 #else
                 Dir calibrations = LittleFS.openDir(DIR_CALIBRATIONS);
                 while (calibrations.next()) {
@@ -248,7 +260,6 @@ namespace SlimeVR {
                     if (!f.isFile()) {
                         continue;
                     }
-
                     CalibrationConfig calibrationConfig;
                     f.read((uint8_t*)&calibrationConfig, sizeof(CalibrationConfig));
 
@@ -351,7 +362,7 @@ namespace SlimeVR {
                 if (LittleFS.exists(path)) {
 #if defined(XIAO_NRF52840)
                     Adafruit_LittleFS_Namespace::File f = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_READ);
-                    if(!f.available() && !f.isDirectory()){ //TODO: Check if this works like isFile
+                    if(f.available() && !f.isDirectory()){ //TODO: Check if this works like isFile
                         return false;
                     }
 #else
