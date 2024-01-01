@@ -59,7 +59,7 @@ void scanPorts() {
       if (i != j){
         Serial.print("Scanning (SDA : SCL) - " + portMap[i] + " : " + portMap[j] + " - ");
         #if defined(XIAO_NRF52840)
-        Wire.begin(); // TODO: see if this works like this
+        Wire.begin(); // TODO (qarnet): see if this works like this
         #else
         Wire.begin(portArray[i], portArray[j]);
         #endif

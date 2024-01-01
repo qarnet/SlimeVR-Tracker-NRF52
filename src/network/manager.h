@@ -23,7 +23,7 @@
 #ifndef SLIMEVR_NETWORK_MANAGER_H_
 #define SLIMEVR_NETWORK_MANAGER_H_
 
-#if !defined(XIAO_NRF52840) //TODO: Find a better way to guard this
+#if !defined(XIAO_NRF52840) //TODO (qarnet) Find a better way to guard this?
 
 #include "Imanager.h"
 #include "globals.h"

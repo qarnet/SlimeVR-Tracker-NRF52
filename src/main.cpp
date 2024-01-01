@@ -103,10 +103,10 @@ void setup()
     Wire.end();
 #endif
 
-    // using `static_cast` here seems to be better, because there are 2 similar function signatures
     #if defined(XIAO_NRF52840)
     Wire.begin();
     #else
+    // using `static_cast` here seems to be better, because there are 2 similar function signatures
     Wire.begin(static_cast<int>(PIN_IMU_SDA), static_cast<int>(PIN_IMU_SCL));
     #endif
 

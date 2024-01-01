@@ -20,7 +20,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
-#if !defined(XIAO_NRF52840)
+#if !defined(XIAO_NRF52840) //TODO (qarnet) Find a better way to guard this?
 
 #include "globals.h"
 #include "logging/Logger.h"

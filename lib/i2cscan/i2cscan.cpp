@@ -14,7 +14,7 @@ String portMap[] = {"2", "3", "4", "5", "6", "7", "8", "9", "10"};
 uint8_t portArray[] = {4, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
 String portMap[] = {"4", "13", "14", "15", "16", "17", "18", "19", "21", "22", "23", "25", "26", "27", "32", "33"};
 uint8_t portExclude[] = {LED_PIN};
-#elif defined(XIAO_NRF52840) // TODO: Actually define correct values here
+#elif defined(XIAO_NRF52840) // TODO (qarnet): Actually define correct values here
 uint8_t portArray[] = {4, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
 String portMap[] = {"4", "13", "14", "15", "16", "17", "18", "19", "21", "22", "23", "25", "26", "27", "32", "33"};
 uint8_t portExclude[] = {LED_PIN};
@@ -63,7 +63,7 @@ namespace I2CSCAN
 
         // Reset the I2C interface back to it's original values
         #if defined(XIAO_NRF52840)
-        Wire.begin(); // TODO: see if this works like this
+        Wire.begin(); // TODO (qarnet): see if this works like this
         #else
         Wire.begin(static_cast<int>(PIN_IMU_SDA), static_cast<int>(PIN_IMU_SCL));
         #endif
@@ -90,7 +90,7 @@ namespace I2CSCAN
         Wire.end();
 #endif
         #if defined(XIAO_NRF52840)
-        Wire.begin(); // TODO: see if this works like this
+        Wire.begin(); // TODO (qarnet): see if this works like this
         #else
         Wire.begin((int)portArray[i], (int)portArray[j]);
         #endif

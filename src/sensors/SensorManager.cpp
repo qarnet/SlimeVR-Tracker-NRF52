@@ -140,7 +140,7 @@ namespace SlimeVR
                     }
                 #else
                     #if defined(XIAO_NRF52840)
-                    Wire.begin(); // TODO: see if this works like this
+                    Wire.begin(); // TODO (qarnet): see if this works like this
                     #else
                     Wire.begin(static_cast<int>(sdaPin), static_cast<int>(sclPin));
                     #endif

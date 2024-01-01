@@ -32,7 +32,7 @@
 #if ESP32
     #include "nvs_flash.h"
 #endif
-// TODO: Implement bluetooth functionality
+// TODO (qarnet): Implement bluetooth functionality
 namespace SerialCommands {
     SlimeVR::Logging::Logger logger("SerialCommands");
 

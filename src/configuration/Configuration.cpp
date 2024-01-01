@@ -239,9 +239,9 @@ namespace SlimeVR {
                     return;
                 }
 
-#if defined(XIAO_NRF52840) //TODO: Figure out how to replicate this directory operation
+#if defined(XIAO_NRF52840) //TODO (qarnet): Figure out how to replicate this directory operation
                 Adafruit_LittleFS_Namespace::File calibrations = LittleFS.open(DIR_CALIBRATIONS);
-                while((calibrations = calibrations.openNextFile(Adafruit_LittleFS_Namespace::FILE_O_READ)).available() != 0) // TODO: Check if this works
+                while((calibrations = calibrations.openNextFile(Adafruit_LittleFS_Namespace::FILE_O_READ)).available() != 0) // TODO (qarnet): Check if this works
                 {
                     Adafruit_LittleFS_Namespace::File f = calibrations;
 
@@ -362,7 +362,7 @@ namespace SlimeVR {
                 if (LittleFS.exists(path)) {
 #if defined(XIAO_NRF52840)
                     Adafruit_LittleFS_Namespace::File f = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_READ);
-                    if(f.available() && !f.isDirectory()){ //TODO: Check if this works like isFile
+                    if(f.available() && !f.isDirectory()){ //TODO (qarnet): Check if this works like isFile
                         return false;
                     }
 #else
