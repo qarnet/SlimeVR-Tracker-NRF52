@@ -22,9 +22,9 @@
 */
 
 #if defined(XIAO_NRF52840)
-// TODO: Implement Adafruit_LittleFS for nRF52
 #include <Adafruit_LittleFS.h>
 #include <Adafruit_LittleFS_File.h>
+Adafruit_LittleFS LittleFS;
 #else
 #include <LittleFS.h>
 #endif
@@ -39,12 +39,9 @@
 namespace SlimeVR {
     namespace Configuration {
         void Configuration::setup() {
-            #if defined(XIAO_NRF52840)
-            #else
             if (m_Loaded) {
                 return;
             }
-
             bool status = LittleFS.begin();
             if (!status) {
                 this->m_Logger.warn("Could not mount LittleFS, formatting");
@@ -65,7 +62,11 @@ namespace SlimeVR {
             if (LittleFS.exists("/config.bin")) {
                 m_Logger.trace("Found configuration file");
 
+#if defined(XIAO_NRF52840)
+                Adafruit_LittleFS_Namespace::File file = LittleFS.open("/config.bin", Adafruit_LittleFS_Namespace::FILE_O_READ);
+#else
                 File file = LittleFS.open("/config.bin", "r");
+#endif
 
                 file.read((uint8_t*)&m_Config.version, sizeof(int32_t));
 
@@ -98,12 +99,9 @@ namespace SlimeVR {
 #ifdef DEBUG_CONFIGURATION
             print();
 #endif
-            #endif
         }
 
         void Configuration::save() {
-            #if defined(XIAO_NRF52840)
-            #else
             for (size_t i = 0; i < m_Calibrations.size(); i++) {
                 CalibrationConfig config = m_Calibrations[i];
                 if (config.type == CalibrationConfigType::NONE) {
@@ -115,24 +113,29 @@ namespace SlimeVR {
 
                 m_Logger.trace("Saving calibration data for %d", i);
 
+#if defined(XIAO_NRF52840)
+                Adafruit_LittleFS_Namespace::File file = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_WRITE);
+#else
                 File file = LittleFS.open(path, "w");
+#endif
                 file.write((uint8_t*)&config, sizeof(CalibrationConfig));
                 file.close();
             }
 
             {
+#if defined(XIAO_NRF52840)
+                Adafruit_LittleFS_Namespace::File file = LittleFS.open("/config.bin", Adafruit_LittleFS_Namespace::FILE_O_WRITE);
+#else
                 File file = LittleFS.open("/config.bin", "w");
+#endif
                 file.write((uint8_t*)&m_Config, sizeof(DeviceConfig));
                 file.close();
             }
 
             m_Logger.debug("Saved configuration");
-            #endif
         }
 
         void Configuration::reset() {
-            #if defined(XIAO_NRF52840)
-            #else
             LittleFS.format();
 
             m_Calibrations.clear();
@@ -140,7 +143,6 @@ namespace SlimeVR {
             save();
 
             m_Logger.debug("Reset configuration");
-            #endif
         }
 
         int32_t Configuration::getVersion() const {
@@ -225,8 +227,6 @@ namespace SlimeVR {
             }
 #else
             {
-                #if defined(XIAO_NRF52840)
-                #else
                 if (!LittleFS.exists(DIR_CALIBRATIONS)) {
                     m_Logger.warn("No calibration data found, creating new directory...");
 
@@ -239,6 +239,9 @@ namespace SlimeVR {
                     return;
                 }
 
+#if defined(XIAO_NRF52840) //TODO: Figure out how to replicate this directory operation
+                Adafruit_LittleFS_Namespace::File calibrations = LittleFS.open(DIR_CALIBRATIONS);
+#else
                 Dir calibrations = LittleFS.openDir(DIR_CALIBRATIONS);
                 while (calibrations.next()) {
                     File f = calibrations.openFile("r");
@@ -254,7 +257,7 @@ namespace SlimeVR {
 
                     setCalibration(sensorId, calibrationConfig);
                 }
-                #endif
+#endif
             }
 #endif
         }
@@ -331,8 +334,6 @@ namespace SlimeVR {
             }
 #else
             {
-                #if defined(XIAO_NRF52840)
-                #else
                 if (!LittleFS.exists(DIR_TEMPERATURE_CALIBRATIONS)) {
                     m_Logger.warn("No temperature calibration data found, creating new directory...");
 
@@ -348,10 +349,17 @@ namespace SlimeVR {
                 char path[32];
                 sprintf(path, DIR_TEMPERATURE_CALIBRATIONS"/%d", sensorId);
                 if (LittleFS.exists(path)) {
+#if defined(XIAO_NRF52840)
+                    Adafruit_LittleFS_Namespace::File f = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_READ);
+                    if(!f.available() && !f.isDirectory()){ //TODO: Check if this works like isFile
+                        return false;
+                    }
+#else
                     File f = LittleFS.open(path, "r");
                     if (!f.isFile()) {
                         return false;
                     }
+#endif
 
                     if (f.size() == sizeof(GyroTemperatureCalibrationConfig)) {
                         CalibrationConfigType storedConfigType;
@@ -377,7 +385,6 @@ namespace SlimeVR {
                     }
                 }
                 
-                #endif
                 return false;
             }
 #endif
@@ -387,20 +394,21 @@ namespace SlimeVR {
             if (config.type == CalibrationConfigType::NONE) {
                 return false;
             }
-            #if defined(XIAO_NRF52840)
-            #else
 
             char path[32];
             sprintf(path, DIR_TEMPERATURE_CALIBRATIONS"/%d", sensorId);
 
             m_Logger.trace("Saving temperature calibration data for sensorId:%d", sensorId);
 
+#if defined(XIAO_NRF52840)
+            Adafruit_LittleFS_Namespace::File file = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_WRITE);
+#else
             File file = LittleFS.open(path, "w");
+#endif
             file.write((uint8_t*)&config, sizeof(GyroTemperatureCalibrationConfig));
             file.close();
 
             m_Logger.debug("Saved temperature calibration data for sensorId:%i", sensorId);
-            #endif
             return true;
         }
 
