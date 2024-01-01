@@ -27,6 +27,7 @@ const unsigned long bootTime = millis();
 bool enabled = true;
 
 void OTA::otaSetup(const char * const otaPassword) {
+#if !defined(XIAO_NRF52840)
     if(otaPassword[0] == '\0') {
         enabled = false;
         return; // No password set up, disable OTA
@@ -60,9 +61,11 @@ void OTA::otaSetup(const char * const otaPassword) {
     ArduinoOTA.begin();
 
     Serial.println("[NOTICE] OTA updates allowed");
+#endif
 }
 
 void OTA::otaUpdate() {
+#if !defined(XIAO_NRF52840)
     if(enabled) {
         if(bootTime + 60000 < millis()) {
             // Disable OTA 60 seconds after boot as protection measure
@@ -72,4 +75,5 @@ void OTA::otaUpdate() {
         }
         ArduinoOTA.handle();
     }
+#endif
 }

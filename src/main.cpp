@@ -24,7 +24,7 @@
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h>
 #include "Wire.h"
-// #include "ota.h"
+#include "ota.h"
 #include "GlobalVars.h"
 #include "globals.h"
 #include "credentials.h"
@@ -43,7 +43,7 @@
 
 Timer<> globalTimer;
 SlimeVR::Logging::Logger logger("SlimeVR");
-// SlimeVR::Sensors::SensorManager sensorManager;
+SlimeVR::Sensors::SensorManager sensorManager;
 SlimeVR::LEDManager ledManager(LED_PIN);
 SlimeVR::Status::StatusManager statusManager;
 SlimeVR::Configuration::Configuration configuration;
@@ -88,9 +88,9 @@ void setup()
     statusManager.setStatus(SlimeVR::Status::LOADING, true);
 
     ledManager.setup();
-    // configuration.setup();
+    configuration.setup();
 
-    // SerialCommands::setUp();
+    SerialCommands::setUp();
 
 #if IMU == IMU_MPU6500 || IMU == IMU_MPU6050 || IMU == IMU_MPU9250 || IMU == IMU_BNO055 || IMU == IMU_ICM20948 || IMU == IMU_BMI160|| IMU == IMU_ICM42688
     I2CSCAN::clearBus(PIN_IMU_SDA, PIN_IMU_SCL); // Make sure the bus isn't stuck when resetting ESP without powering it down
@@ -121,15 +121,15 @@ void setup()
     // Wait for IMU to boot
     delay(500);
 
-    // sensorManager.setup();
+    sensorManager.setup();
 
     networkManager->setup();
-//     OTA::otaSetup(otaPassword);
+    OTA::otaSetup(otaPassword);
     battery.Setup();
 
     statusManager.setStatus(SlimeVR::Status::LOADING, false);
 
-//     sensorManager.postSetup();
+    sensorManager.postSetup();
 
     loopTime = micros();
 }
@@ -137,10 +137,10 @@ void setup()
 void loop()
 {
     globalTimer.tick();
-//     SerialCommands::update();
-//     OTA::otaUpdate();
+    SerialCommands::update();
+    OTA::otaUpdate();
     networkManager->update();
-//     sensorManager.update();
+    sensorManager.update();
     battery.Loop();
     ledManager.update();
 #ifdef TARGET_LOOPTIME_MICROS
@@ -165,7 +165,7 @@ void loop()
         unsigned long now = millis();
         if(lastStatePrint + PRINT_STATE_EVERY_MS < now) {
             lastStatePrint = now;
-            // SerialCommands::printState();
+            SerialCommands::printState();
         }
     #endif
 }

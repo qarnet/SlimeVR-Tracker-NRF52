@@ -24,7 +24,11 @@
 #ifndef _OTA_H_
 #define _OTA_H 1
 
+#if !defined(XIAO_NRF52840)
 #include <ArduinoOTA.h>
+#else
+#include <Arduino.h>
+#endif
 
 namespace OTA {
     void otaSetup(const char * const otaPassword);
