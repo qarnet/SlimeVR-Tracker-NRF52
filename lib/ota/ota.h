@@ -33,6 +33,7 @@
 namespace OTA {
     void otaSetup(const char * const otaPassword);
     void otaUpdate();
+    void otaBleStart();
 }
 
 #endif // _OTA_H_

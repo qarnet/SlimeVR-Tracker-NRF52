@@ -22,12 +22,18 @@
 */
 
 #include "ota.h"
+#if defined(XIAO_NRF52840)
+BLEDfu bledfu;
+#include <bluefruit.h>
+#endif
 
 const unsigned long bootTime = millis();
 bool enabled = true;
 
 void OTA::otaSetup(const char * const otaPassword) {
-#if !defined(XIAO_NRF52840)
+#if defined(XIAO_NRF52840)
+    bledfu.begin();
+#else
     if(otaPassword[0] == '\0') {
         enabled = false;
         return; // No password set up, disable OTA
