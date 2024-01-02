@@ -36,7 +36,9 @@ THE SOFTWARE.
 */
 
 #include "MPU6050.h"
+#if defined(XIAO_NRF52840)
 #include <avr/dtostrf.h>
+#endif
 
 /** Specific address constructor.
  * @param address I2C address, uses default I2C address if none is specified

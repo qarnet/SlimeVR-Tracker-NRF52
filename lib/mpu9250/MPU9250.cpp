@@ -35,7 +35,9 @@ THE SOFTWARE.
 */
 
 #include "MPU9250.h"
+#if defined(XIAO_NRF52840)
 #include <avr/dtostrf.h>
+#endif
 
 /** Default constructor, uses default I2C address.
  * @see MPU9250_DEFAULT_ADDRESS

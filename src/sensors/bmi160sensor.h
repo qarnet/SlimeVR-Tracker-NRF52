@@ -24,7 +24,9 @@
 #ifndef SENSORS_BMI160SENSOR_H
 #define SENSORS_BMI160SENSOR_H
 
+#if !defined(ESP32)
 #include <avr/dtostrf.h>
+#endif
 
 #include "sensor.h"
 #include "sensors/axisremap.h"

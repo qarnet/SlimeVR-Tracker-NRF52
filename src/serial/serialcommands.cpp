@@ -28,6 +28,12 @@
 #include "GlobalVars.h"
 #include "batterymonitor.h"
 #include "utils.h"
+#if !defined(XIAO_NRF52840) && !defined(ESP32)
+#include <ESP8266WiFi.h>
+#include "network/manager.h"
+#elif defined(ESP32)
+#include "network/manager.h"
+#endif
 
 #if ESP32
     #include "nvs_flash.h"

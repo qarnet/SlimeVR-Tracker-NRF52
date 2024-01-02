@@ -23,6 +23,10 @@
 
 #if defined(XIAO_NRF52840)
 #define optimistic_yield(x) yield() // TODO (qarnet): Dirty fix, see if this can be properly implemented
+#elif defined(ESP32)
+#include "network/manager.h"
+#else
+#include <ESP8266WiFi.h>
 #endif
 
 #include "bmi160sensor.h"

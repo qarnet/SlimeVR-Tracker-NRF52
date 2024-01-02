@@ -22,7 +22,6 @@
 */
 
 #include <Arduino.h>
-#include <Adafruit_TinyUSB.h>
 #include "Wire.h"
 #include "ota.h"
 #include "GlobalVars.h"
@@ -34,6 +33,7 @@
 #include "logging/Logger.h"
 
 #if defined(XIAO_NRF52840)
+#include <Adafruit_TinyUSB.h>
 #include "network/bluetoothconnection.h"
 #include "network/bluetoothmanager.h"
 SlimeVR::Network::BluetoothManager bluetoothManager;

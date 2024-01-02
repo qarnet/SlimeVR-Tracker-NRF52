@@ -20,8 +20,11 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
-#if !defined(XIAO_NRF52840) //TODO (qarnet) Find a better way to guard this?
+#if defined(XIAO_NRF52840) //TODO (qarnet) Find a better way to guard this?
+#else
 
+#include "network/wifiprovisioning.h"
+#include "wifihandler.h"
 #include "globals.h"
 #include "logging/Logger.h"
 #include "GlobalVars.h"
