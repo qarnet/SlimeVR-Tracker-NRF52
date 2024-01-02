@@ -36,9 +36,13 @@
 #if defined(XIAO_NRF52840)
 #include "network/bluetoothconnection.h"
 #include "network/bluetoothmanager.h"
+SlimeVR::Network::BluetoothManager bluetoothManager;
+SlimeVR::Network::BluetoothConnection bluetoothConnection;
 #else
 #include "network/connection.h"
 #include "network/manager.h"
+SlimeVR::Network::Manager wifiManager;
+SlimeVR::Network::Connection wifiConnection;
 #endif
 
 Timer<> globalTimer;
@@ -61,13 +65,9 @@ BatteryMonitor battery;
 void setup()
 {
     #if defined(XIAO_NRF52840)
-    SlimeVR::Network::BluetoothManager bluetoothManager;
-    SlimeVR::Network::BluetoothConnection bluetoothConnection;
     networkManager = &bluetoothManager;
     networkConnection = &bluetoothConnection;
     #else
-    SlimeVR::Network::Manager wifiManager;
-    SlimeVR::Network::Connection wifiConnection;
     networkManager = &wifiManager;
     networkConnection = &wifiConnection;
     #endif
