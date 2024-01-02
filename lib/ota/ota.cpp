@@ -23,8 +23,8 @@
 
 #include "ota.h"
 #if defined(XIAO_NRF52840)
-BLEDfu bledfu;
 #include <bluefruit.h>
+BLEDfu bledfu;
 #endif
 
 const unsigned long bootTime = millis();
