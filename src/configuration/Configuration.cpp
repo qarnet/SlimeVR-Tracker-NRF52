@@ -24,9 +24,15 @@
 #if defined(XIAO_NRF52840)
 #include <Adafruit_LittleFS.h>
 #include <Adafruit_LittleFS_File.h>
-Adafruit_LittleFS LittleFS;
+#include <InternalFileSystem.h>
+using namespace Adafruit_LittleFS_Namespace;
+#define LittleFS InternalFS
+#define WRITE FILE_O_WRITE
+#define READ FILE_O_READ
 #else
 #include <LittleFS.h>
+#define WRITE "w"
+#define READ "r"
 #endif
 
 #include "Configuration.h"
@@ -62,11 +68,7 @@ namespace SlimeVR {
             if (LittleFS.exists("/config.bin")) {
                 m_Logger.trace("Found configuration file");
 
-#if defined(XIAO_NRF52840)
-                Adafruit_LittleFS_Namespace::File file = LittleFS.open("/config.bin", Adafruit_LittleFS_Namespace::FILE_O_READ);
-#else
-                File file = LittleFS.open("/config.bin", "r");
-#endif
+                File file = LittleFS.open("/config.bin", READ);
 
                 file.read((uint8_t*)&m_Config.version, sizeof(int32_t));
 
@@ -113,21 +115,15 @@ namespace SlimeVR {
 
                 m_Logger.trace("Saving calibration data for %d", i);
 
-#if defined(XIAO_NRF52840)
-                Adafruit_LittleFS_Namespace::File file = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_WRITE);
-#else
-                File file = LittleFS.open(path, "w");
-#endif
+                File file = LittleFS.open(path, WRITE);
+
                 file.write((uint8_t*)&config, sizeof(CalibrationConfig));
                 file.close();
             }
 
             {
-#if defined(XIAO_NRF52840)
-                Adafruit_LittleFS_Namespace::File file = LittleFS.open("/config.bin", Adafruit_LittleFS_Namespace::FILE_O_WRITE);
-#else
-                File file = LittleFS.open("/config.bin", "w");
-#endif
+                File file = LittleFS.open("/config.bin", WRITE);
+
                 file.write((uint8_t*)&m_Config, sizeof(DeviceConfig));
                 file.close();
             }
@@ -239,20 +235,24 @@ namespace SlimeVR {
                     return;
                 }
 
-#if defined(XIAO_NRF52840) //TODO (qarnet): Figure out how to replicate this directory operation
-                Adafruit_LittleFS_Namespace::File calibrations = LittleFS.open(DIR_CALIBRATIONS);
-                while((calibrations = calibrations.openNextFile(Adafruit_LittleFS_Namespace::FILE_O_READ)).available() != 0) // TODO (qarnet): Check if this works
+#if defined(XIAO_NRF52840)
+                File calibrations(DIR_CALIBRATIONS, READ, LittleFS);
+                File item(LittleFS);
+                while(item = calibrations.openNextFile(READ))
                 {
-                    Adafruit_LittleFS_Namespace::File f = calibrations;
-
                     CalibrationConfig calibrationConfig;
-                    f.read((uint8_t*)&calibrationConfig, sizeof(CalibrationConfig));
+                    // ASSERT HAPPENS HERE
+                    item.read((uint8_t*)&calibrationConfig, sizeof(CalibrationConfig));
 
                     uint8_t sensorId = strtoul(calibrations.name(), nullptr, 10);
                     m_Logger.debug("Found sensor calibration for %s at index %d", calibrationConfigTypeToString(calibrationConfig.type), sensorId);
 
                     setCalibration(sensorId, calibrationConfig);
+
+                    item.close();
                 }
+
+                calibrations.close();
 #else
                 Dir calibrations = LittleFS.openDir(DIR_CALIBRATIONS);
                 while (calibrations.next()) {
@@ -360,17 +360,14 @@ namespace SlimeVR {
                 char path[32];
                 sprintf(path, DIR_TEMPERATURE_CALIBRATIONS"/%d", sensorId);
                 if (LittleFS.exists(path)) {
+                    File f = LittleFS.open(path, READ);
 #if defined(XIAO_NRF52840)
-                    Adafruit_LittleFS_Namespace::File f = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_READ);
-                    if(f.available() && !f.isDirectory()){ //TODO (qarnet): Check if this works like isFile
-                        return false;
-                    }
+                    if(f.isDirectory()){ //TODO (qarnet): Check if this works like isFile
 #else
-                    File f = LittleFS.open(path, "r");
                     if (!f.isFile()) {
+#endif
                         return false;
                     }
-#endif
 
                     if (f.size() == sizeof(GyroTemperatureCalibrationConfig)) {
                         CalibrationConfigType storedConfigType;
@@ -411,11 +408,8 @@ namespace SlimeVR {
 
             m_Logger.trace("Saving temperature calibration data for sensorId:%d", sensorId);
 
-#if defined(XIAO_NRF52840)
-            Adafruit_LittleFS_Namespace::File file = LittleFS.open(path, Adafruit_LittleFS_Namespace::FILE_O_WRITE);
-#else
-            File file = LittleFS.open(path, "w");
-#endif
+            File file = LittleFS.open(path, WRITE);
+
             file.write((uint8_t*)&config, sizeof(GyroTemperatureCalibrationConfig));
             file.close();
 
