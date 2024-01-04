@@ -40,6 +40,9 @@ unsigned long last_rssi_sample = 0;
 
 volatile bool subscribed = false;
 
+// TODO: Cleanup with proper classes
+SlimeVR::Logging::Logger bleHandlerLogger("BleHandler");
+
 const uint8_t UUID128_SRV_CONN[16] =
 {
 	0x08, 0x26, 0xf0, 0x44, 0x14, 0xbb, 0x4e, 0x01,
@@ -135,9 +138,9 @@ void setupConn(void)
 	//      b0    = Unit Flag (0 = Celsius, 1 = Fahrenheit)
 	//    B4:1    = FLOAT  - IEEE-11073 32-bit FLOAT measurement value
 	//    B5      = Temperature Type
-	connection_characteristic.setProperties(CHR_PROPS_INDICATE);
+	connection_characteristic.setProperties(CHR_PROPS_INDICATE | CHR_PROPS_NOTIFY);
 	connection_characteristic.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
-	connection_characteristic.setFixedLen(6);
+	// connection_characteristic.setFixedLen(6);
 	connection_characteristic.setCccdWriteCallback(cccd_callback);  // Optionally capture CCCD updates
 	connection_characteristic.begin();
 	uint8_t htmdata[6] = { 0b00000101, 0, 0 ,0 ,0, 2 }; // Set the characteristic to use Fahrenheit, with type (body) but no timestamp field
@@ -188,9 +191,6 @@ bool BleNetwork::indicate(const void *data, uint16_t length)
 {
 	connection_characteristic.indicate(data, length);
 }
-
-// TODO: Cleanup with proper classes
-SlimeVR::Logging::Logger bleHandlerLogger("BleHandler");
 
 void reportBleError() {
     if(lastBleReportTime + 1000 < millis()) {
