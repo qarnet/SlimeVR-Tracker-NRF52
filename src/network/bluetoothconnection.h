@@ -32,6 +32,7 @@
 #include "quat.h"
 #include "sensors/sensor.h"
 #include "featureflags.h"
+#include "bluetoothhandler.h"
 
 namespace SlimeVR {
 namespace Network {
@@ -114,6 +115,8 @@ public:
 
 	bool beginBundle();
 	bool endBundle();
+
+	void sendTest();
 
 private:
 	void updateSensorState(std::vector<Sensor *> & sensors);

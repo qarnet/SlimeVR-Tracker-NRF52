@@ -22,8 +22,9 @@
 */
 #if defined(XIAO_NRF52840)
 
-#include "bluetoothconnection.h"
+#include "bluefruit.h"
 
+#include "bluetoothconnection.h"
 #include "GlobalVars.h"
 #include "logging/Logger.h"
 #include "packets.h"
@@ -252,6 +253,11 @@ void BluetoothConnection::reset() {
 
 void BluetoothConnection::update() {
 
+}
+
+void BluetoothConnection::sendTest() {
+	uint8_t test = 90;
+	BleNetwork::indicate(&test, sizeof(test));
 }
 
 }  // namespace Network

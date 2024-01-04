@@ -28,6 +28,7 @@
 #include "Imanager.h"
 #include "globals.h"
 #include "packets.h"
+#include "bluetoothhandler.h"
 
 namespace SlimeVR {
 namespace Network {
@@ -36,7 +37,7 @@ class BluetoothManager : public IManager {
 public:
 	void setup();
 	void update();
-
+	bool indicate(const void *data, uint16_t length);
 private:
 	bool m_IsConnected = false;
 
