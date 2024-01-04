@@ -22,14 +22,52 @@
 */
 #if defined(XIAO_NRF52840)
 
-#include "bluetoothmanager.h"
+#include <bluefruit.h>
 
+#include "bluetoothmanager.h"
 #include "GlobalVars.h"
+
+#define ADV_TIMEOUT   0 // seconds. Set this higher to automatically stop advertising after a time
 
 namespace SlimeVR {
 namespace Network {
 
-void BluetoothManager::setup() {  }
+void adv_stop_callback(void)
+{
+	Serial.println("Advertising time passed, advertising will now stop.");
+}
+
+void BluetoothManager::startAdv()
+	{
+	// Advertising packet
+	Bluefruit.Advertising.clearData();
+	Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
+	Bluefruit.Advertising.setType(BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED);
+
+	Bluefruit.ScanResponse.addName();
+
+	/* Start Advertising
+	* - Enable auto advertising if disconnected
+	* - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
+	* - Timeout for fast mode is 30 seconds
+	* - Start(timeout) with timeout = 0 will advertise forever (until connected)
+	* 
+	* For recommended advertising interval
+	* https://developer.apple.com/library/content/qa/qa1931/_index.html
+	*/
+	Bluefruit.Advertising.setStopCallback(adv_stop_callback);
+	Bluefruit.Advertising.restartOnDisconnect(true);
+	Bluefruit.Advertising.setInterval(32, 244);    // in units of 0.625 ms
+	Bluefruit.Advertising.setFastTimeout(30);      // number of seconds in fast mode
+	Bluefruit.Advertising.start(ADV_TIMEOUT);      // Stop advertising entirely after ADV_TIMEOUT seconds 
+}
+
+void BluetoothManager::setup() {
+	Bluefruit.begin();
+	Bluefruit.setName("SlimeVR");
+
+	this->startAdv();
+}
 
 void BluetoothManager::update() {
 

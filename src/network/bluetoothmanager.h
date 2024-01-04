@@ -39,6 +39,8 @@ public:
 
 private:
 	bool m_IsConnected = false;
+
+	void startAdv();
 };
 
 }  // namespace Network
