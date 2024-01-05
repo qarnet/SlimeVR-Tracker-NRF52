@@ -79,11 +79,10 @@ void connect_callback(uint16_t conn_handle)
 	// Get the reference to current connection
 	current_connection = Bluefruit.Connection(conn_handle);
 
-	char central_name[32] = { 0 };
-	current_connection->getPeerName(central_name, sizeof(central_name));
+    current_connection->monitorRssi();
 
-	Serial.print("Connected to ");
-	Serial.println(central_name);
+	// char central_name[32] = { 0 };
+	// current_connection->getPeerName(central_name, sizeof(central_name));
 }
 
 void disconnect_callback(uint16_t conn_handle, uint8_t reason)
@@ -145,6 +144,7 @@ void startAdv()
 	Bluefruit.Advertising.clearData();
 	Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
 	Bluefruit.Advertising.setType(BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED);
+    Bluefruit.Advertising.addService(connection_service);
 
 	Bluefruit.ScanResponse.addName();
 
@@ -250,6 +250,10 @@ void BleNetwork::setUp() {
     packet.reserve(128);
     Bluefruit.begin();
 
+    Bluefruit.autoConnLed(false);
+    Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
+    Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
+
 	Bluefruit.Periph.setConnectCallback(connect_callback);
 	Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
 
@@ -258,11 +262,6 @@ void BleNetwork::setUp() {
 	setupConn();
 
 	startAdv();
-
-	// while(!subscribed)
-	// {
-	// 	delay(10);
-	// }
 
     // bleHandlerLogger.info("Loaded credentials for SSID %s and pass length %d", Ble.SSID().c_str(), Ble.psk().length());
     setStaticIPIfDefined();
@@ -317,8 +316,8 @@ void BleNetwork::upkeep() {
     } else {
         if(millis() - last_rssi_sample >= 2000) {
             last_rssi_sample = millis();
-            // uint8_t signalStrength = Ble.RSSI();
-            // networkConnection->sendSignalStrength(signalStrength);
+            uint8_t signalStrength = current_connection->getRssi();
+            networkConnection->sendSignalStrength(signalStrength);
         }
     }
     return;
