@@ -33,7 +33,8 @@ namespace BleNetwork {
     void setUp();
     void upkeep();
     void setBleCredentials(const char * SSID, const char * pass);
-    // IPAddress getAddress();
+    ble_gap_addr_t getAddress();
+    uint8_t getAddress(uint8_t mac[6]);
     uint8_t getBleState();
     bool indicate(const void *data, uint16_t length);
     BLEConnection *getCurrentConnection();

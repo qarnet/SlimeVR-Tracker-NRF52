@@ -81,6 +81,12 @@ void connect_callback(uint16_t conn_handle)
 
     current_connection->monitorRssi();
 
+    ble_gap_phys_t phy = {
+        .tx_phys = BLE_GAP_PHY_2MBPS,
+        .rx_phys = BLE_GAP_PHY_2MBPS
+    };
+    sd_ble_gap_phy_update(current_connection->handle(), &phy);
+
 	// char central_name[32] = { 0 };
 	// current_connection->getPeerName(central_name, sizeof(central_name));
 }
@@ -108,10 +114,10 @@ void cccdCallback(uint16_t conn_hdl, BLECharacteristic* chr, uint16_t cccd_value
     // this handler is used for multiple CCCD records.
     if (chr->uuid == connection_characteristic.uuid) {
         if (chr->indicateEnabled(conn_hdl)) {
-            Serial.println("Temperature Measurement 'Indicate' enabled");
+            Serial.println("'Indicate' enabled");
 			subscribed = true;
         } else {
-            Serial.println("Temperature Measurement 'Indicate' disabled");
+            Serial.println("'Indicate' disabled");
 			subscribed = false;
         }
     }
@@ -245,6 +251,16 @@ int BleNetwork::getPacket(uint8_t *data, uint16_t length)
 //     return Ble.localIP();
 // }
 
+ble_gap_addr_t BleNetwork::getAddress()
+{
+    return Bluefruit.getAddr();
+}
+
+uint8_t BleNetwork::getAddress(uint8_t mac[6])
+{
+    return Bluefruit.getAddr(mac);
+}
+
 void BleNetwork::setUp() {
     bleHandlerLogger.info("Setting up Ble");
     packet.reserve(128);
@@ -252,10 +268,14 @@ void BleNetwork::setUp() {
 
     Bluefruit.autoConnLed(false);
     Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
-    Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
+    Bluefruit.setTxPower(0);    // Check bluefruit.h for supported values
 
 	Bluefruit.Periph.setConnectCallback(connect_callback);
 	Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
+
+    Bluefruit.Periph.setConnIntervalMS(7.5, 10);
+    // Bluefruit.Periph.setConnSlaveLatency(10);
+    // Bluefruit.Periph.setConnSupervisionTimeoutMS(10000);
 
 	Bluefruit.setName("SlimeVR FBT Tracker");
 
