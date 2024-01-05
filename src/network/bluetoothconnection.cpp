@@ -84,13 +84,12 @@ namespace Network {
 		return;
 
 bool BluetoothConnection::beginPacket() {
-	// this->m_Buf.pos = 0;
 	this->ble_buf.clear();
+	this->ble_buf.reserve(128);
     return true;
 }
 
 bool BluetoothConnection::endPacket() {
-	// BleNetwork::indicate(this->m_Buf.buf, this->m_Buf.pos);
 	BleNetwork::indicate(this->ble_buf.data(), this->ble_buf.size());
     return true;
 }
@@ -502,12 +501,181 @@ void BluetoothConnection::maybeRequestFeatureFlags() {
 }
 
 void BluetoothConnection::searchForServer() {
+		// while (true) {
+		// int packetSize = m_UDP.parsePacket();
+		// if (!packetSize) {
+		// 	break;
+		// }
+
+		// receive incoming UDP packets
+		// int len = m_UDP.read(m_Packet, sizeof(m_Packet));
+
+#ifdef DEBUG_NETWORK
+		// m_Logger.trace(
+		// 	"Received %d bytes from %s, port %d",
+		// 	packetSize,
+		// 	m_UDP.remoteIP().toString().c_str(),
+		// 	m_UDP.remotePort()
+		// );
+		// m_Logger.traceArray("UDP packet contents: ", m_Packet, len);
+#endif
+
+		if(BleNetwork::isSubscribed())
+		{
+			m_Connected = true;
+		}
+		// Handshake is different, it has 3 in the first byte, not the 4th, and data
+		// starts right after
+		// if (m_Packet[0] == PACKET_HANDSHAKE) {
+		// 	if (strncmp((char*)m_Packet + 1, "Hey OVR =D 5", 12) != 0) {
+		// 		m_Logger.error("Received invalid handshake packet");
+		// 		continue;
+		// 	}
+
+		// 	m_ServerHost = m_UDP.remoteIP();
+		// 	m_ServerPort = m_UDP.remotePort();
+		// 	m_LastPacketTimestamp = millis();
+		// 	m_Connected = true;
+			
+		// 	m_FeatureFlagsRequestAttempts = 0;
+		// 	m_ServerFeatures = ServerFeatures { };
+
+		// 	statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, false);
+		// 	ledManager.off();
+
+		// 	m_Logger.debug(
+		// 		"Handshake successful, server is %s:%d",
+		// 		m_UDP.remoteIP().toString().c_str(),
+		// 		m_UDP.remotePort()
+		// 	);
+
+		// 	break;
+		// }
+	// }
+
+	auto now = millis();
+
+	// // This makes the LED blink for 20ms every second
+	// if (m_LastConnectionAttemptTimestamp + 1000 < now) {
+	// 	m_LastConnectionAttemptTimestamp = now;
+	// 	m_Logger.info("Searching for the server on the local network...");
+	// 	Connection::sendTrackerDiscovery();
+	// 	ledManager.on();
+	// } else if (m_LastConnectionAttemptTimestamp + 20 < now) {
+	// 	ledManager.off();
+	// }
 }
 
 void BluetoothConnection::reset() {
+	m_Connected = false;
+	std::fill(m_AckedSensorState, m_AckedSensorState+MAX_IMU_COUNT, SensorStatus::SENSOR_OFFLINE);
+
+	// m_UDP.begin(m_ServerPort);
+
+	statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, true);
 }
 
 void BluetoothConnection::update() {
+	std::vector<Sensor *> & sensors = sensorManager.getSensors();
+
+	updateSensorState(sensors);
+	maybeRequestFeatureFlags();
+
+	if (!m_Connected) {
+		searchForServer();
+		return;
+	}
+
+	if (m_LastPacketTimestamp + TIMEOUT < millis()) {
+		statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, true);
+
+		m_Connected = false;
+		std::fill(m_AckedSensorState, m_AckedSensorState+MAX_IMU_COUNT, SensorStatus::SENSOR_OFFLINE);
+		m_Logger.warn("Connection to server timed out");
+
+		return;
+	}
+
+	// int packetSize = m_UDP.parsePacket();
+	// if (!packetSize) {
+	// 	return;
+	// }
+
+	m_LastPacketTimestamp = millis();
+	// int len = m_UDP.read(m_Packet, sizeof(m_Packet));
+
+#ifdef DEBUG_NETWORK
+	// m_Logger.trace(
+	// 	"Received %d bytes from %s, port %d",
+	// 	packetSize,
+	// 	m_UDP.remoteIP().toString().c_str(),
+	// 	m_UDP.remotePort()
+	// );
+	// m_Logger.traceArray("UDP packet contents: ", m_Packet, len);
+#else
+	// (void)packetSize;
+#endif
+
+	// switch (convert_chars<int>(m_Packet)) {
+	// 	case PACKET_RECEIVE_HEARTBEAT:
+	// 		sendHeartbeat();
+	// 		break;
+
+	// 	case PACKET_RECEIVE_VIBRATE:
+	// 		break;
+
+	// 	case PACKET_RECEIVE_HANDSHAKE:
+	// 		// Assume handshake successful
+	// 		m_Logger.warn("Handshake received again, ignoring");
+	// 		break;
+
+	// 	case PACKET_RECEIVE_COMMAND:
+	// 		break;
+
+	// 	case PACKET_CONFIG:
+	// 		break;
+
+	// 	case PACKET_PING_PONG:
+	// 		returnLastPacket(len);
+	// 		break;
+
+	// 	case PACKET_SENSOR_INFO:
+	// 		if (len < 6) {
+	// 			m_Logger.warn("Wrong sensor info packet");
+	// 			break;
+	// 		}
+
+	// 		for (int i = 0; i < (int)sensors.size(); i++) {
+	// 			if (m_Packet[4] == sensors[i]->getSensorId()) {
+	// 				m_AckedSensorState[i] = (SensorStatus)m_Packet[5];
+	// 				break;
+	// 			}
+	// 		}
+
+	// 		break;
+
+	// 	case PACKET_FEATURE_FLAGS:
+	// 		// Packet type (4) + Packet number (8) + flags (len - 12)
+	// 		if (len < 13) {
+	// 			m_Logger.warn("Invalid feature flags packet: too short");
+	// 			break;
+	// 		}
+
+	// 		bool hadFlags = m_ServerFeatures.isAvailable();
+			
+	// 		uint32_t flagsLength = len - 12;
+	// 		m_ServerFeatures = ServerFeatures::from(&m_Packet[12], flagsLength);
+
+	// 		if (!hadFlags) {
+	// 			#if PACKET_BUNDLING != PACKET_BUNDLING_DISABLED
+	// 				if (m_ServerFeatures.has(ServerFeatures::PROTOCOL_BUNDLE_SUPPORT)) {
+	// 					m_Logger.debug("Server supports packet bundling");
+	// 				}
+	// 			#endif
+	// 		}
+
+	// 		break;
+	// }
 }
 
 }  // namespace Network

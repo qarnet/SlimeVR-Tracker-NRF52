@@ -159,8 +159,8 @@ private:
 
 	// int m_ServerPort = 6969;
 	// IPAddress m_ServerHost = IPAddress(255, 255, 255, 255);
-	// unsigned long m_LastConnectionAttemptTimestamp;
-	// unsigned long m_LastPacketTimestamp;
+	unsigned long m_LastConnectionAttemptTimestamp;
+	unsigned long m_LastPacketTimestamp;
 
 	SensorStatus m_AckedSensorState[MAX_IMU_COUNT] = {SensorStatus::SENSOR_OFFLINE};
 	unsigned long m_LastSensorInfoPacketTimestamp = 0;
@@ -174,12 +174,6 @@ private:
 	uint16_t m_BundlePacketInnerCount = 0;
 
 	uint8_t m_Buf[8];
-	// typedef struct {
-	// 	uint8_t buf[512];
-	// 	uint16_t pos;
-	// } ble_buf;
-
-	// ble_buf m_Buf;
 
 	std::vector<uint8_t> ble_buf;
 };

@@ -180,6 +180,10 @@ bool BleNetwork::isConnected() {
     return isBleConnected;
 }
 
+bool BleNetwork::isSubscribed() {
+    return subscribed;
+}
+
 void BleNetwork::setBleCredentials(const char * SSID, const char * pass) {
     // stopProvisioning();
     setStaticIPIfDefined();
@@ -207,10 +211,10 @@ void BleNetwork::setUp() {
 
 	startAdv();
 
-	while(!subscribed)
-	{
-		delay(10);
-	}
+	// while(!subscribed)
+	// {
+	// 	delay(10);
+	// }
 
     // bleHandlerLogger.info("Loaded credentials for SSID %s and pass length %d", Ble.SSID().c_str(), Ble.psk().length());
     setStaticIPIfDefined();
@@ -230,7 +234,7 @@ uint8_t BleNetwork::getBleState() {
 
 void BleNetwork::upkeep() {
     // upkeepProvisioning();
-    if(true) { // BLE Status
+    if(!current_connection->connected()) { // BLE Status
         if(isBleConnected) {
             bleHandlerLogger.warn("Connection to Ble lost, reconnecting...");
             isBleConnected = false;

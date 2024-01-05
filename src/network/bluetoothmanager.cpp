@@ -35,8 +35,11 @@ void BluetoothManager::setup() {
 }
 
 void BluetoothManager::update() {
+	BleNetwork::upkeep();
 
 	auto wasConnected = m_IsConnected;
+
+	m_IsConnected = ::BleNetwork::isConnected();
 
 	if (!m_IsConnected) {
 		return;
