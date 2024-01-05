@@ -26,6 +26,7 @@
 #if defined(XIAO_NRF52840)
 
 #include <Arduino.h>
+#include <bluefruit.h>
 
 namespace BleNetwork {
     bool isConnected();
@@ -35,6 +36,7 @@ namespace BleNetwork {
     // IPAddress getAddress();
     uint8_t getBleState();
     bool indicate(const void *data, uint16_t length);
+    BLEConnection *getCurrentConnection();
 }
 
 /** Wifi Reconnection Statuses **/

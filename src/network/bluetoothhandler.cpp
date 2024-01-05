@@ -39,6 +39,7 @@ bool hadBle = false;
 unsigned long last_rssi_sample = 0;
 
 volatile bool subscribed = false;
+BLEConnection *current_connection;
 
 // TODO: Cleanup with proper classes
 SlimeVR::Logging::Logger bleHandlerLogger("BleHandler");
@@ -66,10 +67,10 @@ void adv_stop_callback(void)
 void connect_callback(uint16_t conn_handle)
 {
 	// Get the reference to current connection
-	BLEConnection* connection = Bluefruit.Connection(conn_handle);
+	current_connection = Bluefruit.Connection(conn_handle);
 
 	char central_name[32] = { 0 };
-	connection->getPeerName(central_name, sizeof(central_name));
+	current_connection->getPeerName(central_name, sizeof(central_name));
 
 	Serial.print("Connected to ");
 	Serial.println(central_name);
@@ -109,62 +110,16 @@ void cccd_callback(uint16_t conn_hdl, BLECharacteristic* chr, uint16_t cccd_valu
 
 void setupConn(void)
 {
-	// Configure the Health Thermometer service
-	// See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.service.health_thermometer.xml
-	// Supported Characteristics:
-	// Name                         UUID    Requirement Properties
-	// ---------------------------- ------  ----------- ----------
-	// Temperature Measurement      0x2A1C  Mandatory   Indicate
-	//
-	// Temperature Type             0x2A1D  Optional    Read                  <-- Not used here
-	// Intermediate Temperature     0x2A1E  Optional    Read, Notify          <-- Not used here
-	// Measurement Interval         0x2A21  Optional    Read, Write, Indicate <-- Not used here
 	connection_service.begin();
 
-	// Note: You must call .begin() on the BLEService before calling .begin() on
-	// any characteristic(s) within that service definition.. Calling .begin() on
-	// a BLECharacteristic will cause it to be added to the last BLEService that
-	// was 'begin()'ed!
-
-	// Configure the Temperature Measurement characteristic
-	// See:https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.temperature_measurement.xml
-	// Properties = Indicte
-	// Min Len    = 6
-	// Max Len    = 6
-	//    B0      = UINT8  - Flag (MANDATORY)
-	//      b3:7  = Reserved
-	//      b2    = Temperature Type Flag (0 = Not present, 1 = Present)
-	//      b1    = Timestamp Flag (0 = Not present, 1 = Present)
-	//      b0    = Unit Flag (0 = Celsius, 1 = Fahrenheit)
-	//    B4:1    = FLOAT  - IEEE-11073 32-bit FLOAT measurement value
-	//    B5      = Temperature Type
 	connection_characteristic.setProperties(CHR_PROPS_INDICATE | CHR_PROPS_NOTIFY);
 	connection_characteristic.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
-	// connection_characteristic.setFixedLen(6);
-	connection_characteristic.setCccdWriteCallback(cccd_callback);  // Optionally capture CCCD updates
+	connection_characteristic.setCccdWriteCallback(cccd_callback);
 	connection_characteristic.begin();
-	uint8_t htmdata[6] = { 0b00000101, 0, 0 ,0 ,0, 2 }; // Set the characteristic to use Fahrenheit, with type (body) but no timestamp field
-	connection_characteristic.write(htmdata, sizeof(htmdata));                    // Use .write for init data
-
-	// Temperature Type Value
-	// See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.temperature_type.xml
-	//    B0      = UINT8 - Temperature Type
-	//      0     = Reserved
-	//      1     = Armpit
-	//      2     = Body (general)
-	//      3     = Ear (usually ear lobe)
-	//      4     = Finger
-	//      5     = Gastro-intestinal Tract
-	//      6     = Mouth
-	//      7     = Rectum
-	//      8     = Toe
-	//      9     = Tympanum (ear drum)
-	//     10:255 = Reserved
 }
 
 void startAdv()
 	{
-	// Advertising packet
 	Bluefruit.Advertising.clearData();
 	Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
 	Bluefruit.Advertising.setType(BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED);
@@ -187,11 +142,6 @@ void startAdv()
 	Bluefruit.Advertising.start(ADV_TIMEOUT);      // Stop advertising entirely after ADV_TIMEOUT seconds 
 }
 
-bool BleNetwork::indicate(const void *data, uint16_t length)
-{
-	connection_characteristic.indicate(data, length);
-}
-
 void reportBleError() {
     if(lastBleReportTime + 1000 < millis()) {
         lastBleReportTime = millis();
@@ -206,6 +156,24 @@ void setStaticIPIfDefined() {
     const IPAddress subnet(WIFI_STATIC_SUBNET);
     Ble.config(ip, gateway, subnet);
     #endif
+}
+
+void onConnected() {
+    // BleNetwork::stopProvisioning();
+    statusManager.setStatus(SlimeVR::Status::WIFI_CONNECTING, false);
+    isBleConnected = true;
+    hadBle = true;
+    // bleHandlerLogger.info("Connected successfully to SSID '%s', ip address %s", Ble.SSID().c_str(), Ble.localIP().toString().c_str());
+}
+
+BLEConnection *BleNetwork::getCurrentConnection()
+{
+    return current_connection;
+}
+
+bool BleNetwork::indicate(const void *data, uint16_t length)
+{
+	return connection_characteristic.indicate(data, length);
 }
 
 bool BleNetwork::isConnected() {
@@ -227,12 +195,13 @@ void BleNetwork::setBleCredentials(const char * SSID, const char * pass) {
 // }
 
 void BleNetwork::setUp() {
+    bleHandlerLogger.info("Setting up Ble");
     Bluefruit.begin();
 
 	Bluefruit.Periph.setConnectCallback(connect_callback);
 	Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
 
-	Bluefruit.setName("SlimeVR");
+	Bluefruit.setName("SlimeVR FBT Tracker");
 
 	setupConn();
 
@@ -243,12 +212,8 @@ void BleNetwork::setUp() {
 		delay(10);
 	}
 
-	Serial.println("Done");
-    bleHandlerLogger.info("Setting up Ble");
-    // Ble.hostname("SlimeVR FBT Tracker");
     // bleHandlerLogger.info("Loaded credentials for SSID %s and pass length %d", Ble.SSID().c_str(), Ble.psk().length());
     setStaticIPIfDefined();
-    // wl_status_t status = Ble.begin(); // Should connect to last used access point, see https://arduino-esp8266.readthedocs.io/en/latest/esp8266ble/station-class.html#begin
     // bleHandlerLogger.debug("Status: %d", status);
     bleState = SLIME_BLE_SAVED_ATTEMPT;
     bleConnectionTimeout = millis();
@@ -257,14 +222,6 @@ void BleNetwork::setUp() {
 #elif POWERSAVING_MODE == POWER_SAVING_MINIMUM
 #elif POWERSAVING_MODE == POWER_SAVING_MODERATE || POWERSAVING_MODE == POWER_SAVING_MAXIMUM
 #endif
-}
-
-void onConnected() {
-    // BleNetwork::stopProvisioning();
-    statusManager.setStatus(SlimeVR::Status::WIFI_CONNECTING, false);
-    isBleConnected = true;
-    hadBle = true;
-    // bleHandlerLogger.info("Connected successfully to SSID '%s', ip address %s", Ble.SSID().c_str(), Ble.localIP().toString().c_str());
 }
 
 uint8_t BleNetwork::getBleState() {
