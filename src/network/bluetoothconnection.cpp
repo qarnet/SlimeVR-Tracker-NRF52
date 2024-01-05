@@ -522,6 +522,7 @@ void BluetoothConnection::searchForServer() {
 
 		if(BleNetwork::isSubscribed())
 		{
+			m_LastPacketTimestamp = millis();
 			m_Connected = true;
 		}
 		// Handshake is different, it has 3 in the first byte, not the 4th, and data
@@ -534,7 +535,6 @@ void BluetoothConnection::searchForServer() {
 
 		// 	m_ServerHost = m_UDP.remoteIP();
 		// 	m_ServerPort = m_UDP.remotePort();
-		// 	m_LastPacketTimestamp = millis();
 		// 	m_Connected = true;
 			
 		// 	m_FeatureFlagsRequestAttempts = 0;
