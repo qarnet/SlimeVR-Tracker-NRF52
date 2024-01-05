@@ -44,6 +44,14 @@ BLEConnection *current_connection;
 // TODO: Cleanup with proper classes
 SlimeVR::Logging::Logger bleHandlerLogger("BleHandler");
 
+typedef struct {
+        unsigned char m_Packet[128];
+        uint16_t size;
+        bool valid;
+} ble_packet;
+
+ble_packet packet;
+
 const uint8_t UUID128_SRV_CONN[16] =
 {
 	0x08, 0x26, 0xf0, 0x44, 0x14, 0xbb, 0x4e, 0x01,
@@ -87,7 +95,7 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
 	subscribed = false;
 }
 
-void cccd_callback(uint16_t conn_hdl, BLECharacteristic* chr, uint16_t cccd_value)
+void cccdCallback(uint16_t conn_hdl, BLECharacteristic* chr, uint16_t cccd_value)
 {
     // Display the raw request packet
     Serial.print("CCCD Updated: ");
@@ -108,13 +116,27 @@ void cccd_callback(uint16_t conn_hdl, BLECharacteristic* chr, uint16_t cccd_valu
     }
 }
 
+void writeCallback(uint16_t conn_hdl, BLECharacteristic *chr, uint8_t *data, uint16_t length)
+{
+    Serial.println("Write");
+    if(length > sizeof(packet.m_Packet))
+    {
+        return;
+    }
+
+    memcpy(packet.m_Packet, data, length);
+    packet.size = length;
+    packet.valid = true;
+}
+
 void setupConn(void)
 {
 	connection_service.begin();
 
-	connection_characteristic.setProperties(CHR_PROPS_INDICATE | CHR_PROPS_NOTIFY);
-	connection_characteristic.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
-	connection_characteristic.setCccdWriteCallback(cccd_callback);
+	connection_characteristic.setProperties(CHR_PROPS_INDICATE | CHR_PROPS_WRITE);
+	connection_characteristic.setPermission(SECMODE_OPEN, SECMODE_OPEN);
+    connection_characteristic.setWriteCallback(writeCallback);
+	connection_characteristic.setCccdWriteCallback(cccdCallback);
 	connection_characteristic.begin();
 }
 
@@ -192,6 +214,30 @@ void BleNetwork::setBleCredentials(const char * SSID, const char * pass) {
     hadBle = false;
     bleState = SLIME_BLE_SERVER_CRED_ATTEMPT;
     bleConnectionTimeout = millis();
+}
+
+bool BleNetwork::isPacketAvailable()
+{
+    return packet.valid;
+}
+
+int BleNetwork::getPacket(uint8_t *data, uint16_t length)
+{
+    if(!packet.valid)
+    {
+        return -1;
+    }
+
+    if(length > sizeof(packet.m_Packet))
+    {
+        return -2;
+    }
+
+    memcpy(data, packet.m_Packet, length);
+    memset(packet.m_Packet, 0, sizeof(packet.m_Packet));
+    packet.valid = false;
+
+    return length;
 }
 
 // IPAddress BleNetwork::getAddress() {

@@ -38,6 +38,8 @@ namespace BleNetwork {
     bool indicate(const void *data, uint16_t length);
     BLEConnection *getCurrentConnection();
     bool isSubscribed();
+    bool isPacketAvailable();
+    int getPacket(uint8_t *data, uint16_t length);
 }
 
 /** Wifi Reconnection Statuses **/
