@@ -50,7 +50,9 @@ typedef struct {
         bool valid;
 } ble_packet;
 
-ble_packet packet;
+// ble_packet packet;
+
+std::vector<uint8_t> packet;
 
 const uint8_t UUID128_SRV_CONN[16] =
 {
@@ -119,14 +121,12 @@ void cccdCallback(uint16_t conn_hdl, BLECharacteristic* chr, uint16_t cccd_value
 void writeCallback(uint16_t conn_hdl, BLECharacteristic *chr, uint8_t *data, uint16_t length)
 {
     Serial.println("Write");
-    if(length > sizeof(packet.m_Packet))
+    if(length > packet.max_size())
     {
         return;
     }
 
-    memcpy(packet.m_Packet, data, length);
-    packet.size = length;
-    packet.valid = true;
+    packet.insert(packet.begin(), data, data + length);
 }
 
 void setupConn(void)
@@ -218,26 +218,27 @@ void BleNetwork::setBleCredentials(const char * SSID, const char * pass) {
 
 bool BleNetwork::isPacketAvailable()
 {
-    return packet.valid;
+    return !packet.empty();
 }
 
 int BleNetwork::getPacket(uint8_t *data, uint16_t length)
 {
-    if(!packet.valid)
+    if(packet.empty())
     {
         return -1;
     }
 
-    if(length > sizeof(packet.m_Packet))
+    if(length > packet.max_size())
     {
         return -2;
     }
 
-    memcpy(data, packet.m_Packet, length);
-    memset(packet.m_Packet, 0, sizeof(packet.m_Packet));
-    packet.valid = false;
+    memcpy(data, packet.data(), length);
+    int size = packet.size();
 
-    return length;
+    packet.clear();
+
+    return size;
 }
 
 // IPAddress BleNetwork::getAddress() {
@@ -246,6 +247,7 @@ int BleNetwork::getPacket(uint8_t *data, uint16_t length)
 
 void BleNetwork::setUp() {
     bleHandlerLogger.info("Setting up Ble");
+    packet.reserve(128);
     Bluefruit.begin();
 
 	Bluefruit.Periph.setConnectCallback(connect_callback);
