@@ -116,8 +116,6 @@ public:
 	bool beginBundle();
 	bool endBundle();
 
-	void sendTest();
-
 private:
 	void updateSensorState(std::vector<Sensor *> & sensors);
 	void maybeRequestFeatureFlags();
@@ -156,8 +154,8 @@ private:
 	SlimeVR::Logging::Logger m_Logger = SlimeVR::Logging::Logger("UDPConnection");
 
 	// WiFiUDP m_UDP;
-	// unsigned char m_Packet[128];  // buffer for incoming packets
-	// uint64_t m_PacketNumber = 0;
+	unsigned char m_Packet[128];  // buffer for incoming packets
+	uint64_t m_PacketNumber = 0;
 
 	// int m_ServerPort = 6969;
 	// IPAddress m_ServerHost = IPAddress(255, 255, 255, 255);
@@ -175,7 +173,15 @@ private:
 	uint16_t m_BundlePacketPosition = 0;
 	uint16_t m_BundlePacketInnerCount = 0;
 
-	unsigned char m_Buf[8];
+	uint8_t m_Buf[8];
+	// typedef struct {
+	// 	uint8_t buf[512];
+	// 	uint16_t pos;
+	// } ble_buf;
+
+	// ble_buf m_Buf;
+
+	std::vector<uint8_t> ble_buf;
 };
 
 }  // namespace Network

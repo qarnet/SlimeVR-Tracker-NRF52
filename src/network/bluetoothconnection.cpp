@@ -54,11 +54,6 @@ T convert_chars(unsigned char* const src) {
 	return un.v;
 }
 
-typedef struct {
-	uint8_t buf[512];
-	uint16_t pos;
-} ble_buf;
-
 #define DEFINE_BUF(buffer) \
 	ble_buf buffer = {0};
 #define ADD_TO_BUF(buffer, data) \
@@ -89,10 +84,14 @@ namespace Network {
 		return;
 
 bool BluetoothConnection::beginPacket() {
+	// this->m_Buf.pos = 0;
+	this->ble_buf.clear();
     return true;
 }
 
 bool BluetoothConnection::endPacket() {
+	// BleNetwork::indicate(this->m_Buf.buf, this->m_Buf.pos);
+	BleNetwork::indicate(this->ble_buf.data(), this->ble_buf.size());
     return true;
 }
 
@@ -105,204 +104,271 @@ bool BluetoothConnection::endBundle() {
 }
 
 size_t BluetoothConnection::write(const uint8_t *buffer, size_t size) {
-    return 0;
+	this->ble_buf.insert(this->ble_buf.end(), buffer, buffer + size);
+    return 1;
 }
 
 size_t BluetoothConnection::write(uint8_t byte) {
-    return 0;
+	this->ble_buf.insert(this->ble_buf.end(), byte);
+    return 1;
 }
 
 bool BluetoothConnection::sendFloat(float f) {
-    return true;
+	convert_to_chars(f, m_Buf);
+
+	return write(m_Buf, sizeof(f)) != 0;
 }
 
-bool BluetoothConnection::sendByte(uint8_t c) { return true; }
+bool BluetoothConnection::sendByte(uint8_t c) { return write(&c, 1) != 0; }
 
 bool BluetoothConnection::sendShort(uint16_t i) {
-    return true;
+	convert_to_chars(i, m_Buf);
+
+	return write(m_Buf, sizeof(i)) != 0;
 }
 
 bool BluetoothConnection::sendInt(uint32_t i) {
-    return true;
+	convert_to_chars(i, m_Buf);
+
+	return write(m_Buf, sizeof(i)) != 0;
 }
 
 bool BluetoothConnection::sendLong(uint64_t l) {
-    return true;
+	convert_to_chars(l, m_Buf);
+
+	return write(m_Buf, sizeof(l)) != 0;
 }
 
 bool BluetoothConnection::sendBytes(const uint8_t* c, size_t length) {
-    return true;
+    return write(c, length) != 0;
 }
 
 bool BluetoothConnection::sendPacketNumber() {
-    return true;
+	if (m_IsBundle) {
+		return true;
+	}
+
+	uint64_t pn = m_PacketNumber++;
+
+	return sendLong(pn);
 }
 
 bool BluetoothConnection::sendShortString(const char* str) {
+	uint8_t size = strlen(str);
+
+	MUST_TRANSFER_BOOL(sendByte(size));
+	MUST_TRANSFER_BOOL(sendBytes((const uint8_t*)str, size));
+
     return true;
 }
 
 bool BluetoothConnection::sendPacketType(uint8_t type) {
-    return true;
+	MUST_TRANSFER_BOOL(sendByte(0));
+	MUST_TRANSFER_BOOL(sendByte(0));
+	MUST_TRANSFER_BOOL(sendByte(0));
+
+	return sendByte(type);
 }
 
 bool BluetoothConnection::sendLongString(const char* str) {
-    return true;
+	int size = strlen(str);
+
+	MUST_TRANSFER_BOOL(sendInt(size));
+
+	return sendBytes((const uint8_t*)str, size);
 }
 
 int BluetoothConnection::getWriteError() { return 0; }
 
 // PACKET_HEARTBEAT 0
 void BluetoothConnection::sendHeartbeat() {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_HEARTBEAT);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_HEARTBEAT));
+	MUST(sendPacketNumber());
+
+	MUST(endPacket());
 }
 
 // PACKET_ACCEL 4
 void BluetoothConnection::sendSensorAcceleration(uint8_t sensorId, Vector3 vector) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_ACCEL);
-	ADD_FLOAT_TO_BUF(buffer, vector.x);
-	ADD_FLOAT_TO_BUF(buffer, vector.y);
-	ADD_FLOAT_TO_BUF(buffer, vector.z);
-	ADD_TO_BUF(buffer, sensorId);
+	MUST(beginPacket());
 
-	for(int i = 0; i < buffer.pos; i++)
-	{
-		m_Logger.warn("%u", buffer.buf[i]);
-	}
+	MUST(sendPacketType(PACKET_ACCEL));
+	MUST(sendPacketNumber());
+	MUST(sendFloat(vector.x));
+	MUST(sendFloat(vector.y));
+	MUST(sendFloat(vector.z));
+	MUST(sendByte(sensorId));
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(endPacket());
 }
 
 // PACKET_BATTERY_LEVEL 12
 void BluetoothConnection::sendBatteryLevel(float batteryVoltage, float batteryPercentage) {
-	DEFINE_BUF(buffer);
-	
-	ADD_U8_TO_BUF(buffer, PACKET_BATTERY_LEVEL);
-	ADD_TO_BUF(buffer, batteryVoltage);
-	ADD_TO_BUF(buffer, batteryPercentage);
+	MUST(m_Connected);
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(beginPacket());
+
+	MUST(sendPacketType(PACKET_BATTERY_LEVEL));
+	MUST(sendPacketNumber());
+	MUST(sendFloat(batteryVoltage));
+	MUST(sendFloat(batteryPercentage));
+
+	MUST(endPacket());
 }
 
 // PACKET_TAP 13
 void BluetoothConnection::sendSensorTap(uint8_t sensorId, uint8_t value) {
-	DEFINE_BUF(buffer);
-	
-	ADD_U8_TO_BUF(buffer, PACKET_TAP);
-	ADD_TO_BUF(buffer, sensorId);
-	ADD_TO_BUF(buffer, value);
+	MUST(m_Connected);
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(beginPacket());
+
+	MUST(sendPacketType(PACKET_TAP));
+	MUST(sendPacketNumber());
+	MUST(sendByte(sensorId));
+	MUST(sendByte(value));
+
+	MUST(endPacket());
 }
 
 // PACKET_ERROR 14
 void BluetoothConnection::sendSensorError(uint8_t sensorId, uint8_t error) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_ERROR);
-	ADD_TO_BUF(buffer, sensorId);
-	ADD_TO_BUF(buffer, error);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_ERROR));
+	MUST(sendPacketNumber());
+	MUST(sendByte(sensorId));
+	MUST(sendByte(error));
+
+	MUST(endPacket());
 }
 
 // PACKET_SENSOR_INFO 15
 void BluetoothConnection::sendSensorInfo(Sensor* sensor) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_SENSOR_INFO);
-	ADD_U8_TO_BUF(buffer, sensor->getSensorId());
-	ADD_U8_TO_BUF(buffer, (uint8_t)sensor->getSensorState());
-	ADD_U8_TO_BUF(buffer, sensor->getSensorType());
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_SENSOR_INFO));
+	MUST(sendPacketNumber());
+	MUST(sendByte(sensor->getSensorId()));
+	MUST(sendByte((uint8_t)sensor->getSensorState()));
+	MUST(sendByte(sensor->getSensorType()));
+
+	MUST(endPacket());
 }
 
 // PACKET_ROTATION_DATA 17
 void BluetoothConnection::sendRotationData(uint8_t sensorId,
 		Quat* const quaternion,
 		uint8_t dataType,
-		uint8_t accuracyInfo){
-	DEFINE_BUF(buffer);
+		uint8_t accuracyInfo
+){
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_ROTATION_DATA);
-	ADD_TO_BUF(buffer, sensorId);
-	ADD_TO_BUF(buffer, dataType);
-	ADD_FLOAT_TO_BUF(buffer, quaternion->x);
-	ADD_FLOAT_TO_BUF(buffer, quaternion->y);
-	ADD_FLOAT_TO_BUF(buffer, quaternion->z);
-	ADD_FLOAT_TO_BUF(buffer, quaternion->w);
-	ADD_TO_BUF(buffer, accuracyInfo);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_ROTATION_DATA));
+	MUST(sendPacketNumber());
+	MUST(sendByte(sensorId));
+	MUST(sendByte(dataType));
+	MUST(sendFloat(quaternion->x));
+	MUST(sendFloat(quaternion->y));
+	MUST(sendFloat(quaternion->z));
+	MUST(sendFloat(quaternion->w));
+	MUST(sendByte(accuracyInfo));
+
+	MUST(endPacket());
 }
 
 // PACKET_MAGNETOMETER_ACCURACY 18
 void BluetoothConnection::sendMagnetometerAccuracy(uint8_t sensorId, float accuracyInfo) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_MAGNETOMETER_ACCURACY);
-	ADD_TO_BUF(buffer, sensorId);
-	ADD_TO_BUF(buffer, accuracyInfo);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_MAGNETOMETER_ACCURACY));
+	MUST(sendPacketNumber());
+	MUST(sendByte(sensorId));
+	MUST(sendFloat(accuracyInfo));
+
+	MUST(endPacket());
 }
 
 // PACKET_SIGNAL_STRENGTH 19
 void BluetoothConnection::sendSignalStrength(uint8_t signalStrength) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_SIGNAL_STRENGTH);
-	ADD_U8_TO_BUF(buffer, 255);
-	ADD_TO_BUF(buffer, signalStrength);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_SIGNAL_STRENGTH));
+	MUST(sendPacketNumber());
+	MUST(sendByte(255));
+	MUST(sendByte(signalStrength));
+
+	MUST(endPacket());
 }
 
 // PACKET_TEMPERATURE 20
 void BluetoothConnection::sendTemperature(uint8_t sensorId, float temperature) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_TEMPERATURE);
-	ADD_TO_BUF(buffer, sensorId);
-	ADD_TO_BUF(buffer, temperature);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_TEMPERATURE));
+	MUST(sendPacketNumber());
+	MUST(sendByte(sensorId));
+	MUST(sendFloat(temperature));
+
+	MUST(endPacket());
 }
 
 // PACKET_FEATURE_FLAGS 22
 void BluetoothConnection::sendFeatureFlags() {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_FEATURE_FLAGS);
-	// ADD_TO_BUF(buffer, FirmwareFeatures::flags.data());
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_FEATURE_FLAGS));
+	MUST(sendPacketNumber());
+	MUST(write(FirmwareFeatures::flags.data(), FirmwareFeatures::flags.size()));
+
+	MUST(endPacket());
 }
 
 void BluetoothConnection::sendTrackerDiscovery() {
+	MUST(!m_Connected);
+
 	uint8_t mac[6];
-	DEFINE_BUF(buffer);
+	// WiFi.macAddress(mac);
 
-	ADD_U8_TO_BUF(buffer, PACKET_HANDSHAKE);
-	ADD_U8_TO_BUF(buffer, (uint32_t)(0));
-	ADD_U8_TO_BUF(buffer, (uint32_t)(BOARD));
-	ADD_U8_TO_BUF(buffer, (uint32_t)(IMU));
-	ADD_U8_TO_BUF(buffer, (uint32_t)(HARDWARE_MCU));
-	ADD_U8_TO_BUF(buffer, (uint32_t)(0));
-	ADD_U8_TO_BUF(buffer, (uint32_t)(0));
-	ADD_U8_TO_BUF(buffer, (uint32_t)(0));
-	ADD_U8_TO_BUF(buffer, (uint32_t)(FIRMWARE_BUILD_NUMBER));
-	ADD_TO_BUF(buffer, FIRMWARE_VERSION);
-	ADD_TO_BUF(buffer, mac);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_HANDSHAKE));
+	// Packet number is always 0 for handshake
+	MUST(sendLong(0));
+	MUST(sendInt(BOARD));
+	// This is kept for backwards compatibility,
+	// but the latest SlimeVR server will not initialize trackers
+	// with firmware build > 8 until it recieves a sensor info packet
+	MUST(sendInt(IMU));
+	MUST(sendInt(HARDWARE_MCU));
+	MUST(sendInt(0));
+	MUST(sendInt(0));
+	MUST(sendInt(0));
+	MUST(sendInt(FIRMWARE_BUILD_NUMBER));
+	MUST(sendShortString(FIRMWARE_VERSION));
+	// MAC address string
+	MUST(sendBytes(mac, 6));
+
+	MUST(endPacket());
 }
 
 #if ENABLE_INSPECTION
@@ -321,26 +387,34 @@ void BluetoothConnection::sendInspectionRawIMUData(
 	int16_t mZ,
 	uint8_t mA
 ) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_INSPECTION);
-	ADD_U8_TO_BUF(buffer, PACKET_INSPECTION_PACKETTYPE_RAW_IMU_DATA);
-	ADD_TO_BUF(buffer, sensorId);
-	ADD_U8_TO_BUF(buffer, PACKET_INSPECTION_DATATYPE_INT);
-	ADD_TO_BUF(buffer, rX);
-	ADD_TO_BUF(buffer, rY);
-	ADD_TO_BUF(buffer, rZ);
-	ADD_TO_BUF(buffer, rA);
-	ADD_TO_BUF(buffer, aX);
-	ADD_TO_BUF(buffer, aY);
-	ADD_TO_BUF(buffer, aZ);
-	ADD_TO_BUF(buffer, aA);
-	ADD_TO_BUF(buffer, mX);
-	ADD_TO_BUF(buffer, mY);
-	ADD_TO_BUF(buffer, mZ);
-	ADD_TO_BUF(buffer, mA);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_INSPECTION));
+	MUST(sendPacketNumber());
+
+	MUST(sendByte(PACKET_INSPECTION_PACKETTYPE_RAW_IMU_DATA));
+
+	MUST(sendByte(sensorId));
+	MUST(sendByte(PACKET_INSPECTION_DATATYPE_INT));
+
+	MUST(sendInt(rX));
+	MUST(sendInt(rY));
+	MUST(sendInt(rZ));
+	MUST(sendByte(rA));
+
+	MUST(sendInt(aX));
+	MUST(sendInt(aY));
+	MUST(sendInt(aZ));
+	MUST(sendByte(aA));
+
+	MUST(sendInt(mX));
+	MUST(sendInt(mY));
+	MUST(sendInt(mZ));
+	MUST(sendByte(mA));
+
+	MUST(endPacket());
 }
 
 void BluetoothConnection::sendInspectionRawIMUData(
@@ -358,38 +432,52 @@ void BluetoothConnection::sendInspectionRawIMUData(
 	float mZ,
 	uint8_t mA
 ) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	ADD_U8_TO_BUF(buffer, PACKET_INSPECTION);
-	ADD_U8_TO_BUF(buffer, PACKET_INSPECTION_PACKETTYPE_RAW_IMU_DATA);
-	ADD_TO_BUF(buffer, sensorId);
-	ADD_U8_TO_BUF(buffer, PACKET_INSPECTION_DATATYPE_FLOAT);
-	ADD_FLOAT_TO_BUF(buffer, rX);
-	ADD_FLOAT_TO_BUF(buffer, rY);
-	ADD_FLOAT_TO_BUF(buffer, rZ);
-	ADD_FLOAT_TO_BUF(buffer, rA);
-	ADD_FLOAT_TO_BUF(buffer, aX);
-	ADD_FLOAT_TO_BUF(buffer, aY);
-	ADD_FLOAT_TO_BUF(buffer, aZ);
-	ADD_FLOAT_TO_BUF(buffer, aA);
-	ADD_FLOAT_TO_BUF(buffer, mX);
-	ADD_FLOAT_TO_BUF(buffer, mY);
-	ADD_FLOAT_TO_BUF(buffer, mZ);
-	ADD_FLOAT_TO_BUF(buffer, mA);
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendPacketType(PACKET_INSPECTION));
+	MUST(sendPacketNumber());
+
+	MUST(sendByte(PACKET_INSPECTION_PACKETTYPE_RAW_IMU_DATA));
+
+	MUST(sendByte(sensorId));
+	MUST(sendByte(PACKET_INSPECTION_DATATYPE_FLOAT));
+
+	MUST(sendFloat(rX));
+	MUST(sendFloat(rY));
+	MUST(sendFloat(rZ));
+	MUST(sendByte(rA));
+
+	MUST(sendFloat(aX));
+	MUST(sendFloat(aY));
+	MUST(sendFloat(aZ));
+	MUST(sendByte(aA));
+
+	MUST(sendFloat(mX));
+	MUST(sendFloat(mY));
+	MUST(sendFloat(mZ));
+	MUST(sendByte(mA));
+
+	MUST(endPacket());
 }
 #endif
 
 void BluetoothConnection::returnLastPacket(int len) {
-	DEFINE_BUF(buffer);
+	MUST(m_Connected);
 
-	// ADD_TO_BUF()
+	MUST(beginPacket());
 
-	BleNetwork::indicate(buffer.buf, buffer.pos);
+	MUST(sendBytes(m_Packet, len));
+
+	MUST(endPacket());
 }
 
 void BluetoothConnection::updateSensorState(std::vector<Sensor *> & sensors) {
+	if (millis() - m_LastSensorInfoPacketTimestamp <= 1000) {
+		return;
+	}
+
 	m_LastSensorInfoPacketTimestamp = millis();
 
 	for (int i = 0; i < (int)sensors.size(); i++) {
@@ -420,11 +508,6 @@ void BluetoothConnection::reset() {
 }
 
 void BluetoothConnection::update() {
-}
-
-void BluetoothConnection::sendTest() {
-	uint8_t test = 90;
-	BleNetwork::indicate(&test, sizeof(test));
 }
 
 }  // namespace Network
