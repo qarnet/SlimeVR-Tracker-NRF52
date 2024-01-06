@@ -19,6 +19,6 @@ if not IS_WINDOWS:
     bootloader_files_path = FRAMEWORK_DIR + "/bootloader/feather_nrf52840_express/"
 
     for file in pin_files:
-        env.Execute("cp -r " + patch_path + file + " " + pin_files_path + file)
+        env.Execute("cp -u " + patch_path + file + " " + pin_files_path + file)
     for file in bootloader_files:
-        env.Execute("cp -r " + patch_path + file + " " + bootloader_files_path + file)
+        env.Execute("cp -u " + patch_path + file + " " + bootloader_files_path + file)
