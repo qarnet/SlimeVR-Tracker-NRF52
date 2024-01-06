@@ -38,47 +38,102 @@ public:
 	virtual void searchForServer() = 0;
 	virtual void update() = 0;
 	virtual void reset() = 0;
-	virtual bool isConnected() const = 0;
+
+	bool isConnected() const { return m_Connected; };
 
 	// PACKET_ACCEL 4
-	virtual void sendSensorAcceleration(uint8_t sensorId, Vector3 vector) = 0;
+	void sendSensorAcceleration(uint8_t sensorId, Vector3 vector);
 
 	// PACKET_BATTERY_LEVEL 12
-	virtual void sendBatteryLevel(float batteryVoltage, float batteryPercentage) = 0;
+	void sendBatteryLevel(float batteryVoltage, float batteryPercentage);
 
 	// PACKET_TAP 13
-	virtual void sendSensorTap(uint8_t sensorId, uint8_t value) = 0;
+	void sendSensorTap(uint8_t sensorId, uint8_t value);
 
 	// PACKET_ERROR 14
-	virtual void sendSensorError(uint8_t sensorId, uint8_t error) = 0;
+	void sendSensorError(uint8_t sensorId, uint8_t error);
 
 	// PACKET_ROTATION_DATA 17
-	virtual void sendRotationData(uint8_t sensorId,
+	void sendRotationData(uint8_t sensorId,
 		Quat* const quaternion,
 		uint8_t dataType,
-		uint8_t accuracyInfo) = 0;
+		uint8_t accuracyInfo);
 
 	// PACKET_MAGNETOMETER_ACCURACY 18
-	virtual void sendMagnetometerAccuracy(uint8_t sensorId, float accuracyInfo) = 0;
+	void sendMagnetometerAccuracy(uint8_t sensorId, float accuracyInfo);
 
 	// PACKET_SIGNAL_STRENGTH 19
-	virtual void sendSignalStrength(uint8_t signalStrength) = 0;
+	void sendSignalStrength(uint8_t signalStrength);
 
 	// PACKET_TEMPERATURE 20
-	virtual void sendTemperature(uint8_t sensorId, float temperature) = 0;
+	void sendTemperature(uint8_t sensorId, float temperature);
 
 	// PACKET_FEATURE_FLAGS 22
-	virtual void sendFeatureFlags() = 0;
+	void sendFeatureFlags();
 
 #if ENABLE_INSPECTION
-	virtual void sendInspectionRawIMUData() = 0;
-	virtual void sendInspectionRawIMUData() = 0;
+	void sendInspectionRawIMUData();
+	void sendInspectionRawIMUData();
 #endif
 
-	virtual const ServerFeatures& getServerFeatureFlags() = 0;
+	const ServerFeatures& getServerFeatureFlags();
 
-	virtual bool beginBundle() = 0;
-	virtual bool endBundle() = 0;
+	bool beginBundle();
+	bool endBundle();
+
+	protected:
+	virtual bool beginPacket() = 0;
+	virtual bool endPacket() = 0;
+	virtual size_t write(const uint8_t *buffer, size_t size) = 0;
+	virtual int getWriteError() = 0;
+	// PACKET_HANDSHAKE 3
+	virtual void sendTrackerDiscovery() = 0;
+
+	void updateSensorState(std::vector<Sensor *> & sensors);
+	void maybeRequestFeatureFlags();
+	
+	size_t write(uint8_t byte);
+
+	bool sendPacketType(uint8_t type);
+	bool sendPacketNumber();
+	bool sendFloat(float f);
+	bool sendByte(uint8_t c);
+	bool sendShort(uint16_t i);
+	bool sendInt(uint32_t i);
+	bool sendLong(uint64_t l);
+	bool sendBytes(const uint8_t* c, size_t length);
+	bool sendShortString(const char* str);
+	bool sendLongString(const char* str);
+
+	void returnLastPacket(int len);
+
+	// PACKET_HEARTBEAT 0
+	void sendHeartbeat();
+
+	// PACKET_SENSOR_INFO 15
+	void sendSensorInfo(Sensor* sensor);
+
+	bool m_Connected = false;
+	SlimeVR::Logging::Logger m_Logger = SlimeVR::Logging::Logger("UDPConnection");
+
+	unsigned char m_Packet[128];  // buffer for incoming packets
+	uint64_t m_PacketNumber = 0;
+
+	unsigned long m_LastConnectionAttemptTimestamp;
+	unsigned long m_LastPacketTimestamp;
+
+	SensorStatus m_AckedSensorState[MAX_IMU_COUNT] = {SensorStatus::SENSOR_OFFLINE};
+	unsigned long m_LastSensorInfoPacketTimestamp = 0;
+
+	uint8_t m_FeatureFlagsRequestAttempts = 0;
+	unsigned long m_FeatureFlagsRequestTimestamp = millis();
+	ServerFeatures m_ServerFeatures{};
+
+	bool m_IsBundle = false;
+	uint16_t m_BundlePacketPosition = 0;
+	uint16_t m_BundlePacketInnerCount = 0;
+
+	unsigned char m_Buf[8];
 };
 
 }  // namespace Network
