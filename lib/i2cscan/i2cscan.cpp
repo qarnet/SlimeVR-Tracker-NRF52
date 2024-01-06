@@ -14,9 +14,9 @@ String portMap[] = {"2", "3", "4", "5", "6", "7", "8", "9", "10"};
 uint8_t portArray[] = {4, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
 String portMap[] = {"4", "13", "14", "15", "16", "17", "18", "19", "21", "22", "23", "25", "26", "27", "32", "33"};
 uint8_t portExclude[] = {LED_PIN};
-#elif defined(XIAO_NRF52840) // TODO (qarnet): Actually define correct values here
-uint8_t portArray[] = {4, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33};
-String portMap[] = {"4", "13", "14", "15", "16", "17", "18", "19", "21", "22", "23", "25", "26", "27", "32", "33"};
+#elif defined(XIAO_NRF52840)
+uint8_t portArray[] = {4, 5};
+String portMap[] = {"4", "5"};
 uint8_t portExclude[] = {LED_PIN};
 #endif
 
