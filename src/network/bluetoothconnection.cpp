@@ -54,22 +54,6 @@ T convert_chars(unsigned char* const src) {
 	return un.v;
 }
 
-#define DEFINE_BUF(buffer) \
-	ble_buf buffer = {0};
-#define ADD_TO_BUF(buffer, data) \
-	memcpy(&buffer.buf[buffer.pos], &data, sizeof(data)); \
-	buffer.pos += sizeof(data);
-#define ADD_U8_TO_BUF(buffer, data) \
-	buffer.buf[buffer.pos] = data; \
-	buffer.pos += 1;
-#define ADD_ARR_TO_BUF(buffer, data) \
-	memcpy(&buffer.buf[buffer.pos], data, sizeof(data)); \
-	buffer.pos += sizeof(data);
-#define ADD_FLOAT_TO_BUF(buffer, data) \
-	convert_to_chars(data, &buffer.buf[buffer.pos]); \
-	buffer.pos += sizeof(data);
-
-
 #define TIMEOUT 3000UL
 
 namespace SlimeVR {
@@ -84,25 +68,72 @@ namespace Network {
 		return;
 
 bool BluetoothConnection::beginPacket() {
+	if (m_IsBundle) {
+		m_BundlePacketPosition = 0;
+		return true;
+	}
+
 	this->ble_buf.clear();
 	this->ble_buf.reserve(128);
+
     return true;
 }
 
 bool BluetoothConnection::endPacket() {
+	if (m_IsBundle) {
+		uint32_t innerPacketSize = m_BundlePacketPosition;
+
+		MUST_TRANSFER_BOOL((innerPacketSize > 0));
+
+		m_IsBundle = false;
+		
+		if (m_BundlePacketInnerCount == 0) {
+			sendPacketType(PACKET_BUNDLE);
+			sendPacketNumber();
+		}
+		sendShort(innerPacketSize);
+		sendBytes(m_Packet, innerPacketSize);
+
+		m_BundlePacketInnerCount++;
+		m_IsBundle = true;
+		return true;
+	}
 	BleNetwork::indicate(this->ble_buf.data(), this->ble_buf.size());
     return true;
 }
 
 bool BluetoothConnection::beginBundle() {
+	// MUST_TRANSFER_BOOL(m_ServerFeatures.has(ServerFeatures::PROTOCOL_BUNDLE_SUPPORT));
+	MUST_TRANSFER_BOOL(m_Connected);
+	MUST_TRANSFER_BOOL(!m_IsBundle);
+	MUST_TRANSFER_BOOL(beginPacket());
+
+	m_IsBundle = true;
+	m_BundlePacketInnerCount = 0;
+
     return true;
 }
 
 bool BluetoothConnection::endBundle() {
-    return true;
+    MUST_TRANSFER_BOOL(m_IsBundle);
+
+	m_IsBundle = false;
+	
+	MUST_TRANSFER_BOOL((m_BundlePacketInnerCount > 0));
+
+	return endPacket();
 }
 
 size_t BluetoothConnection::write(const uint8_t *buffer, size_t size) {
+	if (m_IsBundle) {
+		if (m_BundlePacketPosition + size > sizeof(m_Packet)) {
+			return 0;
+		}
+		memcpy(m_Packet + m_BundlePacketPosition, buffer, size);
+		m_BundlePacketPosition += size;
+		return size;
+	}
+
 	this->ble_buf.insert(this->ble_buf.end(), buffer, buffer + size);
     return 1;
 }
@@ -579,15 +610,15 @@ void BluetoothConnection::update() {
 		return;
 	}
 
-	if (m_LastPacketTimestamp + TIMEOUT < millis()) {
-		statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, true);
+	// if (m_LastPacketTimestamp + TIMEOUT < millis()) {
+	// 	statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, true);
 
-		m_Connected = false;
-		std::fill(m_AckedSensorState, m_AckedSensorState+MAX_IMU_COUNT, SensorStatus::SENSOR_OFFLINE);
-		m_Logger.warn("Connection to server timed out");
+	// 	m_Connected = false;
+	// 	std::fill(m_AckedSensorState, m_AckedSensorState+MAX_IMU_COUNT, SensorStatus::SENSOR_OFFLINE);
+	// 	m_Logger.warn("Connection to server timed out");
 
-		return;
-	}
+	// 	return;
+	// }
 
 	if (!BleNetwork::isPacketAvailable()) {
 		return;
@@ -609,7 +640,7 @@ void BluetoothConnection::update() {
 	// (void)packetSize;
 #endif
 
-	switch (convert_chars<uint8_t>(m_Packet)) {
+	switch (convert_chars<int>(m_Packet)) {
 		case PACKET_RECEIVE_HEARTBEAT:
 			sendHeartbeat();
 			break;

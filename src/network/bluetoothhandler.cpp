@@ -80,12 +80,19 @@ void connect_callback(uint16_t conn_handle)
 	current_connection = Bluefruit.Connection(conn_handle);
 
     current_connection->monitorRssi();
+    
+    current_connection->requestPHY();
+    current_connection->requestDataLengthUpdate();
+    current_connection->requestMtuExchange(247);
+    current_connection->requestConnectionParameter(6); // in unit of 1.25
 
     ble_gap_phys_t phy = {
         .tx_phys = BLE_GAP_PHY_2MBPS,
         .rx_phys = BLE_GAP_PHY_2MBPS
     };
     sd_ble_gap_phy_update(current_connection->handle(), &phy);
+
+    delay(1000);
 
 	// char central_name[32] = { 0 };
 	// current_connection->getPeerName(central_name, sizeof(central_name));
@@ -104,20 +111,14 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
 
 void cccdCallback(uint16_t conn_hdl, BLECharacteristic* chr, uint16_t cccd_value)
 {
-    // Display the raw request packet
-    Serial.print("CCCD Updated: ");
-    //Serial.printBuffer(request->data, request->len);
-    Serial.print(cccd_value);
-    Serial.println("");
-
     // Check the characteristic this CCCD update is associated with in case
     // this handler is used for multiple CCCD records.
     if (chr->uuid == connection_characteristic.uuid) {
-        if (chr->indicateEnabled(conn_hdl)) {
-            Serial.println("'Indicate' enabled");
+        if (chr->notifyEnabled(conn_hdl)) {
+            Serial.println("'notify' enabled");
 			subscribed = true;
         } else {
-            Serial.println("'Indicate' disabled");
+            Serial.println("'notify' disabled");
 			subscribed = false;
         }
     }
@@ -138,10 +139,11 @@ void setupConn(void)
 {
 	connection_service.begin();
 
-	connection_characteristic.setProperties(CHR_PROPS_INDICATE | CHR_PROPS_WRITE);
+	connection_characteristic.setProperties(CHR_PROPS_NOTIFY | CHR_PROPS_WRITE_WO_RESP);
 	connection_characteristic.setPermission(SECMODE_OPEN, SECMODE_OPEN);
     connection_characteristic.setWriteCallback(writeCallback);
 	connection_characteristic.setCccdWriteCallback(cccdCallback);
+    connection_characteristic.setMaxLen(128);
 	connection_characteristic.begin();
 }
 
@@ -201,7 +203,7 @@ BLEConnection *BleNetwork::getCurrentConnection()
 
 bool BleNetwork::indicate(const void *data, uint16_t length)
 {
-	return connection_characteristic.indicate(data, length);
+	return connection_characteristic.notify(data, length);
 }
 
 bool BleNetwork::isConnected() {
@@ -264,20 +266,19 @@ uint8_t BleNetwork::getAddress(uint8_t mac[6])
 void BleNetwork::setUp() {
     bleHandlerLogger.info("Setting up Ble");
     packet.reserve(128);
-    Bluefruit.begin();
 
     Bluefruit.autoConnLed(false);
     Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
     Bluefruit.setTxPower(0);    // Check bluefruit.h for supported values
+    Bluefruit.setName("SlimeVR FBT Tracker");
+    
+    Bluefruit.begin();
 
 	Bluefruit.Periph.setConnectCallback(connect_callback);
 	Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
-
-    Bluefruit.Periph.setConnIntervalMS(7.5, 10);
+    Bluefruit.Periph.setConnIntervalMS(6, 12);
     // Bluefruit.Periph.setConnSlaveLatency(10);
     // Bluefruit.Periph.setConnSupervisionTimeoutMS(10000);
-
-	Bluefruit.setName("SlimeVR FBT Tracker");
 
 	setupConn();
 
