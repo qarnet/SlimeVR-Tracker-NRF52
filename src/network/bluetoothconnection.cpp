@@ -128,10 +128,10 @@ size_t BluetoothConnection::write(const uint8_t *buffer, size_t size) {
     return 1;
 }
 
-// size_t BluetoothConnection::write(uint8_t byte) {
-// 	this->ble_buf.insert(this->ble_buf.end(), byte);
-//     return 1;
-// }
+size_t BluetoothConnection::write(uint8_t byte) {
+	this->ble_buf.insert(this->ble_buf.end(), byte);
+    return 1;
+}
 
 int BluetoothConnection::getWriteError() { return 0; }
 

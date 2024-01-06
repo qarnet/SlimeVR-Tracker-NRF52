@@ -39,18 +39,18 @@ namespace Network {
 
 class BluetoothConnection : public IConnection {
 public:
-	void searchForServer();
-	void update();
-	void reset();
-	bool beginBundle();
+	void searchForServer() override;
+	void update() override;
+	void reset() override;
+	bool beginBundle() override;
 private:
-	bool beginPacket();
-	bool endPacket();
-	size_t write(const uint8_t *buffer, size_t size);
-	// size_t write(uint8_t byte);
-	int getWriteError();
+	bool beginPacket() override;
+	bool endPacket() override;
+	size_t write(const uint8_t *buffer, size_t size) override;
+	size_t write(uint8_t byte) override;
+	int getWriteError() override;
 	// PACKET_HANDSHAKE 3
-	void sendTrackerDiscovery();
+	void sendTrackerDiscovery() override;
 
 	std::vector<uint8_t> ble_buf;
 };

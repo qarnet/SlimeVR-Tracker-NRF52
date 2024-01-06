@@ -78,7 +78,7 @@ public:
 
 	const ServerFeatures& getServerFeatureFlags();
 
-	bool beginBundle();
+	virtual bool beginBundle();
 	bool endBundle();
 
 	protected:
@@ -92,7 +92,7 @@ public:
 	void updateSensorState(std::vector<Sensor *> & sensors);
 	void maybeRequestFeatureFlags();
 	
-	size_t write(uint8_t byte);
+	virtual size_t write(uint8_t byte);
 
 	bool sendPacketType(uint8_t type);
 	bool sendPacketNumber();
