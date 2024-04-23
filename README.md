@@ -1,3 +1,11 @@
+# Temporary Developments Section (xiao_ble nrf52840)
+
+## Setup (only works on linux as of now)
+Run pip3 install adafruit-nrfutil  
+Run the convert_bootloader script inside the patch folder (Make sure xiao_ble is in DFU mode by pressing reset twice. The device will show up as a USB drive named XIAO-BOOT)  
+If successful, the device will show up as a USB drive named ARCADE-N4  
+Now upload the firmware via platformio  
+
 # SlimeVR Tracker firmware for ESP
 
 Firmware for ESP8266 / ESP32 microcontrollers and different IMU sensors to use them as a vive-like trackers in VR.
