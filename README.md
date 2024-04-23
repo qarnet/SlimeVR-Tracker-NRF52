@@ -4,7 +4,7 @@
 Run pip3 install adafruit-nrfutil  
 Run the convert_bootloader script inside the patch folder (Make sure xiao_ble is in DFU mode by pressing reset twice. The device will show up as a USB drive named XIAO-BOOT)  
 If successful, the device will show up as a USB drive named ARCADE-N4  
-Now upload the firmware via platformio  
+Now upload the firmware via platformio (make sure to get the device to be in bootloader mode, by pressing reset twice)  
 
 # SlimeVR Tracker firmware for ESP
 
